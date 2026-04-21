@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import StatusBar from '../components/StatusBar'
 import Toast from '../components/Toast'
 import { supabase } from '../lib/supabase'
@@ -8,8 +8,9 @@ import { errorMessage } from '../lib/tokens'
 
 export default function JoinScreen() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { profile } = useProfile()
-  const [code, setCode] = useState('')
+  const [code, setCode] = useState(() => (searchParams.get('code') || '').toUpperCase())
   const [password, setPassword] = useState('')
   const [needsPassword, setNeedsPassword] = useState(false)
   const [loading, setLoading] = useState(false)

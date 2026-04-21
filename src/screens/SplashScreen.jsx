@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import StatusBar from '../components/StatusBar'
 import { EMOJI_LIST } from '../lib/tokens'
 import { useProfile } from '../hooks/useProfile'
@@ -8,17 +8,32 @@ const COLORS = ['#eab308', '#f97316', '#ec4899', '#a855f7', '#3b82f6', '#14b8a6'
 
 export default function SplashScreen() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { profile, setProfile } = useProfile()
   const [nick, setNick] = useState(profile.nick || '')
   const [emoji, setEmoji] = useState(profile.emoji || '🎯')
   const [color, setColor] = useState(profile.color || '#eab308')
+
+  const incomingCode = searchParams.get('code')
+
+  // If visitor arrives with ?code=... and already has a profile,
+  // send them straight to join. Otherwise, after they set profile, go to join.
+  useEffect(() => {
+    if (incomingCode && profile.nick && profile.nick.length >= 2) {
+      navigate(`/join?code=${incomingCode}`, { replace: true })
+    }
+  }, [incomingCode, profile.nick, navigate])
 
   const canContinue = nick.trim().length >= 2
 
   const go = () => {
     if (!canContinue) return
     setProfile({ nick: nick.trim(), emoji, color })
-    navigate('/rooms')
+    if (incomingCode) {
+      navigate(`/join?code=${incomingCode}`)
+    } else {
+      navigate('/rooms')
+    }
   }
 
   return (
