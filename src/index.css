@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(180deg, #0b1120 0%, #060a15 100%);
+    color: #e2e8f0;
+    font-family: 'Outfit', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+  button {
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  input, textarea, select {
+    font-family: inherit;
+  }
+  /* Safe area on notched devices */
+  .safe-top { padding-top: max(16px, env(safe-area-inset-top)); }
+  .safe-bottom { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+}
+
+@layer components {
+  .k-label {
+    @apply text-[10px] font-mono font-semibold tracking-[.2em] uppercase text-slate-500;
+  }
+  .cta-primary {
+    @apply bg-amber-brand text-black font-bold py-4 rounded-[14px] text-sm uppercase tracking-wider transition-all active:scale-95 shadow-amber;
+  }
+}
+
+/* Hide scrollbars but keep scrolling */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
