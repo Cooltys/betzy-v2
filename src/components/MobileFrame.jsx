@@ -16,7 +16,14 @@ export default function MobileFrame({ children }) {
   }, [])
 
   if (isMobile) {
-    return <div className="h-[100dvh] flex flex-col bg-bg overflow-hidden">{children}</div>
+    return (
+      <div
+        className="flex flex-col bg-bg overflow-hidden"
+        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+      >
+        {children}
+      </div>
+    )
   }
 
   return (
