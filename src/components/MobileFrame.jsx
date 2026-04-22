@@ -16,7 +16,7 @@ export default function MobileFrame({ children }) {
   }, [])
 
   if (isMobile) {
-    return <div className="min-h-[100dvh] flex flex-col bg-bg">{children}</div>
+    return <div className="h-[100dvh] flex flex-col bg-bg overflow-hidden">{children}</div>
   }
 
   return (

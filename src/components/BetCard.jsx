@@ -21,8 +21,18 @@ export default function BetCard({ question, options, bets, seed, isHost, me, onO
   const optCount = qOpts.length || 1
   const seedPerOption = seed / optCount
 
+  // Tick every second while open so we detect expiry without a manual refresh
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    if (q.status !== 'open' || !q.expires_at) return
+    const tick = () => setNow(Date.now())
+    tick()
+    const interval = setInterval(tick, 1000)
+    return () => clearInterval(interval)
+  }, [q.status, q.expires_at])
+
   // Effective status: if open but expired, show as 'closed'
-  const isExpired = q.expires_at && new Date(q.expires_at).getTime() < Date.now()
+  const isExpired = q.expires_at && new Date(q.expires_at).getTime() < now
   const effStatus = q.status === 'open' && isExpired ? 'closed' : q.status
 
   const myBets = qBets.filter(b => b.player_id === me?.id)

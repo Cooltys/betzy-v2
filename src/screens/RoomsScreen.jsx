@@ -9,7 +9,7 @@ export default function RoomsScreen() {
   const navigate = useNavigate()
   const { profile } = useProfile()
   const { user } = useAuth()
-  const { rooms, loading } = useMyRooms(user?.id)
+  const { rooms, loading, error } = useMyRooms(user?.id)
   const install = useInstallPrompt()
 
   return (
@@ -19,7 +19,7 @@ export default function RoomsScreen() {
       {/* Header */}
       <div className="px-5 pt-2.5 pb-4 flex items-center gap-3 shrink-0">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/splash')}
           className="w-9 h-9 rounded-[10px] bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0"
           aria-label="Edytuj profil"
         >
@@ -74,7 +74,14 @@ export default function RoomsScreen() {
           <div className="text-center py-16 text-slate-500 text-sm">Ładowanie…</div>
         )}
 
-        {!loading && rooms.length === 0 && (
+        {error && !loading && (
+          <div className="bg-loss/10 border border-loss/30 rounded-xl p-4 mb-3 text-xs text-loss">
+            <div className="font-bold mb-1">Błąd ładowania pokoi</div>
+            <div className="font-mono text-[11px]">{error.message}</div>
+          </div>
+        )}
+
+        {!loading && !error && rooms.length === 0 && (
           <div className="text-center py-16 px-6">
             <div className="text-[56px] mb-4">🎯</div>
             <h3 className="text-xl font-bold text-white mb-2">Brak pokoi</h3>

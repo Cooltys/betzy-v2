@@ -28,8 +28,13 @@ export function useMyRooms(userId) {
         .order('joined_at', { ascending: false })
 
       if (cancelled) return
-      if (error) setError(error)
-      else setRooms(data || [])
+      if (error) {
+        console.error('[useMyRooms] query error:', error, 'for userId:', userId)
+        setError(error)
+      } else {
+        console.log('[useMyRooms] fetched rooms:', data?.length, 'for userId:', userId)
+        setRooms(data || [])
+      }
       setLoading(false)
     }
 

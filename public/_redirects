@@ -1,0 +1,6 @@
+# Cloudflare Pages redirects / rewrites
+# Root → landing page (static HTML)
+/                /landing.html    200
+
+# SPA fallback: every other path serves index.html (React Router handles client-side routing)
+/*               /index.html      200

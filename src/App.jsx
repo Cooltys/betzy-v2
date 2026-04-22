@@ -31,27 +31,32 @@ export default function App() {
 
   const hasProfile = profile.nick && profile.nick.length >= 2
 
+  // Landing ("/") is a static HTML served by Cloudflare — React app lives under /splash, /rooms, etc.
+  // If someone has a profile and lands on /splash, send them to /rooms unless there's a code in URL.
+
   return (
     <MobileFrame>
       <Routes>
-        <Route path="/" element={<SplashScreen />} />
+        {/* If somehow React loads at "/" (dev fallback), show splash */}
+        <Route path="/" element={<Navigate to="/splash" replace />} />
+        <Route path="/splash" element={<SplashScreen />} />
         <Route
           path="/rooms"
-          element={hasProfile ? <RoomsScreen /> : <Navigate to="/" replace />}
+          element={hasProfile ? <RoomsScreen /> : <Navigate to="/splash" replace />}
         />
         <Route
           path="/join"
-          element={hasProfile ? <JoinScreen /> : <Navigate to="/" replace />}
+          element={hasProfile ? <JoinScreen /> : <Navigate to="/splash" replace />}
         />
         <Route
           path="/create"
-          element={hasProfile ? <CreateRoomScreen /> : <Navigate to="/" replace />}
+          element={hasProfile ? <CreateRoomScreen /> : <Navigate to="/splash" replace />}
         />
         <Route
           path="/room/:sessionId"
-          element={hasProfile ? <RoomScreen /> : <Navigate to="/" replace />}
+          element={hasProfile ? <RoomScreen /> : <Navigate to="/splash" replace />}
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/splash" replace />} />
       </Routes>
     </MobileFrame>
   )

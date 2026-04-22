@@ -6,7 +6,7 @@ export default function ShareSheet({ open, onClose, joinCode, roomName, emoji })
   const [copied, setCopied] = useState(null) // 'code' | 'link'
 
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  const link = `${origin}/?code=${joinCode}`
+  const link = `${origin}/join?code=${joinCode}`
 
   const copy = async (what, text) => {
     try {

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Betzy — obstawiaj z ekipą</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0f172a;
+    --navy-2:#0b1120;
+    --navy-3:#070c17;
+    --ink:#e2e8f0;
+    --ink-mute:#94a3b8;
+    --ink-dim:#64748b;
+    --line:rgba(226,232,240,.08);
+    --line-2:rgba(226,232,240,.14);
+    --gold:#eab308;
+    --gold-2:#facc15;
+    --gold-soft:rgba(234,179,8,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--navy);
+    color:var(--ink);
+    font-family:'Outfit',system-ui,sans-serif;
+    font-weight:300;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+  .eyebrow{font-size:10px;letter-spacing:.28em;text-transform:uppercase;font-weight:600;color:var(--gold);opacity:.85}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+  @media (min-width:768px){.wrap{padding:0 40px}}
+
+  /* Variant switcher */
+  .variant-switch{
+    position:fixed;top:16px;left:50%;transform:translateX(-50%);
+    z-index:90;display:flex;gap:4px;padding:4px;
+    background:rgba(15,23,42,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--line-2);border-radius:999px;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  .variant-switch button{
+    background:transparent;color:var(--ink-mute);
+    font-family:inherit;font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    padding:9px 16px;border:none;border-radius:999px;cursor:pointer;transition:all .3s ease;
+  }
+  .variant-switch button.active{background:var(--gold);color:#111}
+  @media (min-width:768px){.variant-switch{top:24px}.variant-switch button{padding:10px 22px;font-size:11px}}
+
+  .variant{display:none}
+  .variant.active{display:block}
+
+  /* Buttons */
+  .btn-gold{
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    background:var(--gold);color:#0b0b0b;font-family:inherit;font-weight:800;
+    font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+    padding:18px 32px;border:none;border-radius:999px;cursor:pointer;
+    box-shadow:0 0 0 1px rgba(234,179,8,.4),0 20px 50px -20px rgba(234,179,8,.6);
+    transition:transform .2s ease,box-shadow .3s ease,background .2s ease;
+  }
+  .btn-gold:hover{background:var(--gold-2);transform:translateY(-1px);box-shadow:0 0 0 1px rgba(234,179,8,.6),0 30px 70px -20px rgba(234,179,8,.8)}
+  .btn-gold:active{transform:translateY(0) scale(.98)}
+  .btn-ghost{
+    display:inline-flex;align-items:center;gap:8px;background:transparent;
+    color:var(--ink-mute);font-family:inherit;font-weight:500;font-size:13px;
+    padding:14px 0;border:none;cursor:pointer;
+  }
+  .btn-ghost:hover{color:var(--ink)}
+
+  /* ────────── VARIANT A — KURS / LIVE MULTIPLIER ────────── */
+  .va-hero{
+    position:relative;min-height:100vh;padding:110px 0 60px;overflow:hidden;
+    background:
+      radial-gradient(80% 60% at 50% 0%, rgba(234,179,8,.08), transparent 60%),
+      linear-gradient(180deg, #0b1120 0%, #0f172a 60%, #0f172a 100%);
+  }
+  .va-hero::before{
+    content:"";position:absolute;inset:0;z-index:0;
+    background-image:
+      linear-gradient(rgba(234,179,8,.05) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(234,179,8,.05) 1px,transparent 1px);
+    background-size:60px 60px;
+    mask-image:radial-gradient(ellipse at center,black 30%,transparent 70%);
+    -webkit-mask-image:radial-gradient(ellipse at center,black 30%,transparent 70%);
+  }
+  .va-hero-grid{position:relative;z-index:2;display:grid;gap:48px;grid-template-columns:1fr}
+  @media (min-width:960px){.va-hero-grid{grid-template-columns:1fr 1.1fr;gap:60px;align-items:center}}
+
+  .va-eyebrow{display:inline-flex;align-items:center;gap:10px;margin-bottom:24px}
+  .va-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 12px #4ade80;animation:pulseDot 1.4s ease-in-out infinite}
+  @keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.4}}
+  .va-title{
+    font-family:inherit;font-weight:800;font-size:clamp(40px,7vw,72px);
+    line-height:.95;letter-spacing:-.035em;margin:0 0 22px;color:#fff;
+  }
+  .va-title em{font-style:normal;color:var(--gold);position:relative;display:inline-block}
+  .va-title em::after{
+    content:"";position:absolute;left:0;right:0;bottom:4px;height:10px;
+    background:rgba(234,179,8,.15);z-index:-1;transform:skewX(-8deg);
+  }
+  .va-sub{font-size:clamp(16px,2.2vw,19px);color:var(--ink-mute);font-weight:300;line-height:1.55;margin:0 0 32px;max-width:520px}
+  .va-cta-row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-bottom:18px}
+  .va-note{font-size:12px;color:var(--ink-dim);letter-spacing:.04em}
+
+  /* The live multiplier card — main visual */
+  .live-card{
+    position:relative;background:linear-gradient(180deg,#121b2f 0%,#0b1120 100%);
+    border:1px solid var(--line-2);border-radius:28px;padding:28px;
+    box-shadow:0 40px 80px -40px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.04);
+    overflow:hidden;
+  }
+  .live-card::before{
+    content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;
+    background:linear-gradient(135deg,rgba(234,179,8,.4),transparent 40%,transparent 60%,rgba(234,179,8,.2));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;
+  }
+  .lc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+  .lc-tag{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:var(--ink-mute);text-transform:uppercase}
+  .lc-tag .live-dot{width:7px;height:7px;border-radius:50%;background:#ef4444;box-shadow:0 0 10px #ef4444;animation:pulseDot 1s infinite}
+  .lc-round{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-dim);letter-spacing:.15em}
+
+  .lc-question{font-size:13px;color:var(--ink-mute);font-weight:400;margin:0 0 4px;letter-spacing:.02em}
+  .lc-subject{font-size:22px;font-weight:700;color:#fff;margin:0 0 24px;letter-spacing:-.01em}
+
+  .odds-list{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+  .odds-row{
+    display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:14px;
+    background:rgba(255,255,255,.02);border:1px solid var(--line);
+    border-radius:14px;padding:14px 16px;transition:all .3s ease;
+    position:relative;overflow:hidden;
+  }
+  .odds-row.leader{border-color:rgba(234,179,8,.35);background:linear-gradient(90deg,rgba(234,179,8,.08),rgba(234,179,8,.02))}
+  .odds-row .label{font-size:14px;font-weight:600;color:#fff}
+  .odds-row .players{font-size:11px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace}
+  .odds-row .multi{
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:18px;
+    color:var(--gold);letter-spacing:-.01em;min-width:70px;text-align:right;
+    transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .odds-row .multi.up{animation:bumpUp .6s ease}
+  .odds-row .multi.down{animation:bumpDown .6s ease}
+  @keyframes bumpUp{0%{transform:translateY(0)}40%{transform:translateY(-6px);color:#4ade80}100%{transform:translateY(0)}}
+  @keyframes bumpDown{0%{transform:translateY(0)}40%{transform:translateY(4px);color:#f87171}100%{transform:translateY(0)}}
+  .odds-row .bar{position:absolute;left:0;bottom:0;height:2px;background:var(--gold);transition:width .6s cubic-bezier(.34,1.56,.64,1)}
+
+  .lc-footer{display:flex;justify-content:space-between;align-items:center;padding-top:18px;border-top:1px solid var(--line)}
+  .lc-pool{display:flex;flex-direction:column;gap:2px}
+  .lc-pool .k{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-dim);font-weight:600}
+  .lc-pool .v{font-family:'JetBrains Mono',monospace;font-size:16px;color:#fff;font-weight:600}
+  .lc-timer{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--gold);font-weight:600}
+
+  /* floating avatars joining */
+  .avatars{display:flex;align-items:center;gap:-8px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+  .avatars .stack{display:flex}
+  .avatars .av{
+    width:26px;height:26px;border-radius:50%;border:2px solid #0b1120;
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:700;color:#0b1120;margin-left:-8px;
+    animation:popIn .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  .avatars .av:first-child{margin-left:0}
+  @keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+  .avatars .label{margin-left:12px;font-size:11px;color:var(--ink-mute);font-family:'JetBrains Mono',monospace}
+
+  /* Stats strip */
+  .va-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:80px 0 0}
+  .va-stats .cell{background:var(--navy);padding:36px 20px;text-align:center}
+  .va-stats .n{font-family:'JetBrains Mono',monospace;font-size:clamp(28px,4vw,42px);font-weight:700;color:var(--gold);letter-spacing:-.02em}
+  .va-stats .l{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-mute);margin-top:6px;font-weight:500}
+
+  /* How it works */
+  .section{padding:100px 0;position:relative}
+  .section-head{margin-bottom:60px;max-width:640px}
+  .section-head h2{font-size:clamp(32px,4.5vw,48px);font-weight:800;letter-spacing:-.03em;line-height:1.05;color:#fff;margin:18px 0 16px}
+  .section-head p{font-size:16px;color:var(--ink-mute);font-weight:300;line-height:1.6;margin:0}
+
+  .steps{display:grid;gap:20px;grid-template-columns:1fr}
+  @media (min-width:860px){.steps{grid-template-columns:repeat(3,1fr);gap:24px}}
+  .step{
+    position:relative;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);
+    border:1px solid var(--line);border-radius:24px;padding:36px 28px 32px;
+    transition:all .4s ease;overflow:hidden;
+  }
+  .step:hover{border-color:var(--line-2);background:linear-gradient(180deg,rgba(234,179,8,.04),transparent)}
+  .step .num{
+    position:absolute;top:20px;right:24px;font-family:'JetBrains Mono',monospace;
+    font-size:12px;color:var(--gold);letter-spacing:.18em;font-weight:600;
+  }
+  .step .icon{width:44px;height:44px;border-radius:12px;border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;margin-bottom:24px;background:rgba(234,179,8,.06)}
+  .step h3{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.01em;margin:0 0 10px}
+  .step p{font-size:14px;color:var(--ink-mute);font-weight:300;line-height:1.6;margin:0}
+  .step .arrow{position:absolute;top:50%;right:-20px;width:40px;height:1px;background:linear-gradient(90deg,var(--line-2),transparent);display:none}
+  @media (min-width:860px){.step:not(:last-child) .arrow{display:block}}
+
+  /* Use cases */
+  .cases{display:grid;gap:18px;grid-template-columns:1fr;margin-top:40px}
+  @media (min-width:640px){.cases{grid-template-columns:repeat(2,1fr)}}
+  @media (min-width:960px){.cases{grid-template-columns:repeat(4,1fr)}}
+  .case{
+    position:relative;aspect-ratio:4/5;border-radius:20px;overflow:hidden;
+    border:1px solid var(--line);background:#0b1120;cursor:pointer;
+    transition:transform .5s ease;
+  }
+  .case:hover{transform:translateY(-4px)}
+  .case .img{position:absolute;inset:0;background-size:cover;background-position:center;filter:saturate(1.1) brightness(.75);transition:transform .8s ease,filter .5s ease}
+  .case:hover .img{transform:scale(1.06);filter:saturate(1.2) brightness(.85)}
+  .case .overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,0) 30%,rgba(15,23,42,.95) 100%)}
+  .case .content{position:absolute;left:0;right:0;bottom:0;padding:22px}
+  .case .content .k{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:.2em;font-weight:600;display:block;margin-bottom:8px}
+  .case .content .t{font-size:17px;font-weight:700;color:#fff;letter-spacing:-.01em;margin:0 0 4px}
+  .case .content .d{font-size:12px;color:var(--ink-mute);font-weight:300;line-height:1.5;margin:0}
+
+  /* Proof */
+  .proof{
+    max-width:820px;margin:0 auto;padding:60px 40px;text-align:center;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  }
+  .proof .quote{font-family:inherit;font-size:clamp(24px,3.4vw,36px);font-weight:500;line-height:1.25;letter-spacing:-.02em;color:#fff;margin:0 0 24px}
+  .proof .quote::before,.proof .quote::after{color:var(--gold);font-weight:700}
+  .proof .quote::before{content:"„"}
+  .proof .quote::after{content:"”"}
+  .proof .meta{display:inline-flex;align-items:center;gap:14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-mute);letter-spacing:.18em;text-transform:uppercase;font-weight:500}
+  .proof .meta .pill{padding:4px 10px;background:var(--gold-soft);color:var(--gold);border-radius:999px;letter-spacing:.1em}
+
+  /* Bottom CTA */
+  .bcta{padding:120px 0;text-align:center;position:relative;overflow:hidden}
+  .bcta::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 70% at 50% 100%,rgba(234,179,8,.1),transparent 60%);z-index:0}
+  .bcta-inner{position:relative;z-index:2}
+  .bcta h2{font-size:clamp(40px,6vw,68px);font-weight:800;letter-spacing:-.035em;line-height:.95;color:#fff;margin:0 0 22px}
+  .bcta h2 em{font-style:normal;color:var(--gold)}
+  .bcta p{font-size:17px;color:var(--ink-mute);font-weight:300;max-width:540px;margin:0 auto 36px;line-height:1.55}
+  .bcta .tiny{margin-top:16px;font-size:12px;color:var(--ink-dim)}
+
+  /* Footer */
+  footer{padding:40px 0;border-top:1px solid var(--line);text-align:center}
+  footer .row{display:flex;justify-content:center;align-items:center;gap:12px;margin-bottom:10px}
+  footer .row img{width:28px;height:28px;border-radius:50%;object-fit:cover;object-position:top}
+  footer .row span{font-weight:700;color:#fff;letter-spacing:-.01em}
+  footer .copy{font-size:11px;color:var(--ink-dim);letter-spacing:.1em}
+
+  /* ────────── VARIANT B — EDITORIAL ────────── */
+  .vb-hero{
+    position:relative;padding:120px 0 80px;
+    background:var(--navy);
+    overflow:hidden;
+  }
+  .vb-hero-grid{
+    display:grid;gap:48px;grid-template-columns:1fr;
+    position:relative;z-index:2;
+  }
+  @media (min-width:900px){.vb-hero-grid{grid-template-columns:1.3fr 1fr;gap:80px;align-items:end}}
+
+  .vb-meta{
+    display:flex;justify-content:space-between;align-items:center;
+    padding-bottom:28px;margin-bottom:48px;border-bottom:1px solid var(--line);
+  }
+  .vb-meta .left{display:flex;align-items:center;gap:12px}
+  .vb-meta .left img{width:30px;height:30px;border-radius:50%;object-fit:cover;object-position:top;border:1px solid var(--line-2)}
+  .vb-meta .left span{font-weight:700;letter-spacing:-.01em;font-size:15px}
+  .vb-meta .right{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-dim);letter-spacing:.18em;text-transform:uppercase}
+
+  .vb-title{
+    font-family:inherit;font-weight:300;
+    font-size:clamp(48px,9vw,108px);line-height:.92;letter-spacing:-.04em;
+    color:#fff;margin:0 0 28px;
+  }
+  .vb-title .w1{display:block;font-weight:300}
+  .vb-title .w2{display:block;font-weight:800;font-style:italic;color:var(--gold)}
+  .vb-title .w3{display:block;font-weight:300}
+
+  .vb-lede{
+    font-size:clamp(17px,2vw,21px);color:var(--ink);font-weight:300;
+    line-height:1.55;letter-spacing:-.005em;margin:0 0 36px;max-width:520px;
+  }
+  .vb-lede strong{font-weight:600;color:#fff}
+
+  .vb-rule{width:56px;height:1px;background:var(--gold);margin:0 0 28px}
+
+  .vb-cta-col{display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+  .vb-cta-col .note{font-size:12px;color:var(--ink-dim);letter-spacing:.04em;margin-top:4px}
+
+  /* editorial photo */
+  .vb-photo{
+    position:relative;border-radius:2px;overflow:hidden;
+    aspect-ratio:4/5;background:#111;
+    box-shadow:0 50px 100px -40px rgba(0,0,0,.7);
+  }
+  .vb-photo img{width:100%;height:100%;object-fit:cover;filter:saturate(1.05) contrast(1.02)}
+  .vb-photo .caption{
+    position:absolute;bottom:16px;left:16px;right:16px;
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:#fff;
+    letter-spacing:.15em;text-transform:uppercase;opacity:.75;
+  }
+  .vb-photo .caption::before{content:"Fig. 01 — ";color:var(--gold);opacity:.9}
+  .vb-photo .badge{
+    position:absolute;top:18px;left:18px;padding:6px 10px;
+    background:rgba(15,23,42,.7);backdrop-filter:blur(10px);
+    border:1px solid var(--line-2);border-radius:4px;
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;
+  }
+
+  /* Editorial numbered section */
+  .vb-section{padding:120px 0;border-top:1px solid var(--line)}
+  .vb-section-head{display:grid;grid-template-columns:1fr;gap:24px;margin-bottom:72px}
+  @media (min-width:900px){.vb-section-head{grid-template-columns:120px 1fr 1fr;gap:40px;align-items:start}}
+  .vb-section-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);letter-spacing:.2em;font-weight:600;padding-top:10px}
+  .vb-section-num em{font-style:normal;color:var(--ink-dim)}
+  .vb-section-title{font-size:clamp(32px,4.5vw,56px);font-weight:400;letter-spacing:-.03em;line-height:1.02;color:#fff;margin:0}
+  .vb-section-title em{font-style:italic;color:var(--gold);font-weight:500}
+  .vb-section-intro{font-size:15px;color:var(--ink-mute);font-weight:300;line-height:1.65;margin:0}
+  @media (min-width:900px){.vb-section-intro{padding-top:14px}}
+
+  .vb-steps{display:grid;grid-template-columns:1fr;gap:0}
+  @media (min-width:860px){.vb-steps{grid-template-columns:repeat(3,1fr);gap:0}}
+  .vb-step{padding:36px 0;border-top:1px solid var(--line);position:relative}
+  @media (min-width:860px){
+    .vb-step{padding:0 36px;border-top:none;border-left:1px solid var(--line)}
+    .vb-step:first-child{padding-left:0;border-left:none}
+    .vb-step:last-child{padding-right:0}
+  }
+  .vb-step .k{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);letter-spacing:.2em;font-weight:600;margin-bottom:20px;display:block}
+  .vb-step h3{font-size:24px;font-weight:500;color:#fff;letter-spacing:-.015em;line-height:1.2;margin:0 0 14px}
+  .vb-step p{font-size:14px;color:var(--ink-mute);font-weight:300;line-height:1.65;margin:0}
+
+  /* Use cases — editorial */
+  .vb-cases{display:grid;grid-template-columns:1fr;gap:0;border-top:1px solid var(--line)}
+  @media (min-width:768px){.vb-cases{grid-template-columns:repeat(2,1fr)}}
+  .vb-case{
+    border-bottom:1px solid var(--line);padding:44px 0;position:relative;
+    display:grid;grid-template-columns:60px 1fr;gap:24px;align-items:start;
+    transition:padding .4s ease;
+  }
+  @media (min-width:768px){
+    .vb-case{padding:44px 32px;border-right:1px solid var(--line)}
+    .vb-case:nth-child(2n){border-right:none}
+  }
+  .vb-case:hover{padding-left:12px}
+  @media (min-width:768px){.vb-case:hover{padding-left:44px}}
+  .vb-case .n{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);letter-spacing:.2em;font-weight:700;padding-top:2px}
+  .vb-case h3{font-size:22px;font-weight:500;color:#fff;letter-spacing:-.015em;margin:0 0 12px}
+  .vb-case h3 em{font-style:italic;color:var(--gold);font-weight:500}
+  .vb-case p{font-size:14px;color:var(--ink-mute);font-weight:300;line-height:1.65;margin:0 0 14px}
+  .vb-case .tags{display:flex;flex-wrap:wrap;gap:8px}
+  .vb-case .tag{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-dim);letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border:1px solid var(--line);border-radius:999px}
+
+  /* Editorial quote */
+  .vb-proof{padding:120px 0;border-top:1px solid var(--line);text-align:left}
+  .vb-proof-grid{display:grid;grid-template-columns:1fr;gap:28px}
+  @media (min-width:900px){.vb-proof-grid{grid-template-columns:120px 1fr;gap:40px}}
+  .vb-proof .label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);letter-spacing:.2em;font-weight:600;padding-top:14px}
+  .vb-proof .q{font-family:inherit;font-weight:400;font-size:clamp(28px,4vw,48px);line-height:1.2;letter-spacing:-.025em;color:#fff;margin:0 0 36px}
+  .vb-proof .q em{color:var(--gold);font-style:italic;font-weight:500}
+  .vb-proof .q::before{content:"„";color:var(--gold);font-weight:600;margin-right:4px}
+  .vb-proof .q::after{content:"";color:var(--gold);font-weight:600}
+  .vb-proof .signoff{display:flex;align-items:center;gap:14px}
+  .vb-proof .signoff .sig-dot{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#b45309);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:#0b0b0b;font-size:14px}
+  .vb-proof .signoff .meta{display:flex;flex-direction:column;gap:2px}
+  .vb-proof .signoff .who{font-size:14px;color:#fff;font-weight:600;letter-spacing:-.01em}
+  .vb-proof .signoff .ctx{font-size:12px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;letter-spacing:.1em}
+
+  /* Editorial bottom CTA */
+  .vb-bcta{padding:140px 0 120px;border-top:1px solid var(--line);text-align:center;position:relative}
+  .vb-bcta h2{font-size:clamp(44px,7vw,84px);font-weight:300;letter-spacing:-.035em;line-height:.95;color:#fff;margin:0 0 10px}
+  .vb-bcta h2 em{font-style:italic;font-weight:600;color:var(--gold)}
+  .vb-bcta .vb-sub-small{font-size:16px;color:var(--ink-mute);font-weight:300;margin:0 0 36px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.55}
+  .vb-bcta .tiny{margin-top:18px;font-size:12px;color:var(--ink-dim);letter-spacing:.04em}
+
+  /* shared small screens */
+  @media (max-width:540px){
+    .va-hero{padding:100px 0 50px}
+    .vb-hero{padding:90px 0 60px}
+    .section,.vb-section,.vb-proof{padding:80px 0}
+    .bcta,.vb-bcta{padding:90px 0}
+    .step{padding:28px 22px}
+    .live-card{padding:22px}
+  }
+
+  /* Hide/show via JS */
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════ VARIANT A ══════════════════════════════ -->
+<main class="variant active" id="variant-a">
+
+  <!-- HERO -->
+  <section class="va-hero">
+    <div class="wrap">
+      <div class="va-hero-grid">
+        <!-- Left: copy -->
+        <div>
+          <h1 class="va-title">Warstwa <em>emocji</em><br>na każdej imprezie.</h1>
+          <p class="va-sub">Stwórz pokój w 10 sekund. Ekipa dołącza z telefonu, mnożniki żyją, ranking kręci się na żywo. Zero rejestracji, zero prawdziwej kasy — tylko frajda z obstawiania z ludźmi, których znasz.</p>
+          <div class="va-cta-row">
+            <button class="btn-gold" onclick="cta()">
+              Wypróbuj za darmo
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            </button>
+            <button class="btn-ghost" onclick="scrollToHow()">
+              Jak to działa?
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </button>
+          </div>
+          <p class="va-note">Bez rejestracji. Wchodzisz i grasz.</p>
+        </div>
+
+        <!-- Right: live card -->
+        <div>
+          <div class="live-card" id="liveCard">
+            <div class="lc-head">
+              <div class="lc-tag"><span class="live-dot"></span>Live · Runda 04</div>
+              <div class="lc-round">Pokój · TŁUSTY-CZWARTEK</div>
+            </div>
+            <p class="lc-question">Pytanie od hosta</p>
+            <p class="lc-subject">Kto pierwszy złoży propozycję wyjścia na piwo?</p>
+
+            <div class="odds-list" id="oddsList">
+              <div class="odds-row leader" data-opt="0">
+                <div>
+                  <div class="label">Krzysiek z marketingu</div>
+                  <div class="players">9 graczy · 2 340 pts</div>
+                </div>
+                <div class="multi" data-m="1.8">×1.80</div>
+                <div class="bar" style="width:64%"></div>
+              </div>
+              <div class="odds-row" data-opt="1">
+                <div>
+                  <div class="label">Ania — nie piwo, tylko wino</div>
+                  <div class="players">5 graczy · 1 120 pts</div>
+                </div>
+                <div class="multi" data-m="3.1">×3.10</div>
+                <div class="bar" style="width:31%"></div>
+              </div>
+              <div class="odds-row" data-opt="2">
+                <div>
+                  <div class="label">Nikt — zostajemy do końca</div>
+                  <div class="players">3 graczy · 480 pts</div>
+                </div>
+                <div class="multi" data-m="5.4">×5.40</div>
+                <div class="bar" style="width:13%"></div>
+              </div>
+            </div>
+
+            <div class="lc-footer">
+              <div class="lc-pool">
+                <span class="k">Pula</span>
+                <span class="v" id="poolV">3 940 pts</span>
+              </div>
+              <div class="lc-timer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <span id="timerV">02:47</span>
+              </div>
+            </div>
+
+            <div class="avatars">
+              <div class="stack" id="avStack">
+                <div class="av" style="background:#facc15">KM</div>
+                <div class="av" style="background:#4ade80">AN</div>
+                <div class="av" style="background:#60a5fa">PT</div>
+                <div class="av" style="background:#f472b6">MK</div>
+                <div class="av" style="background:#fb923c">JZ</div>
+              </div>
+              <span class="label">+ 21 w pokoju</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="va-stats">
+        <div class="cell"><div class="n">10 s</div><div class="l">Start pokoju</div></div>
+        <div class="cell"><div class="n">0 zł</div><div class="l">Koszt dla graczy</div></div>
+        <div class="cell"><div class="n">∞</div><div class="l">Rund na wieczór</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="howA">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Jak to działa</span>
+        <h2>Trzy kroki dzielą cię od<br>pierwszej rundy.</h2>
+        <p>Host robi setup, gracze skanują QR. Reszta dzieje się sama — wy tylko krzyczcie.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <span class="num">01</span>
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M12 9v6M9 12h6"/></svg>
+          </div>
+          <h3>Stwórz pokój</h3>
+          <p>Wpisujesz nick, wybierasz język i — jeśli chcesz — hasło. W 10 sekund masz pokój gotowy do gry.</p>
+          <div class="arrow"></div>
+        </div>
+        <div class="step">
+          <span class="num">02</span>
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="1.7" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M20 8v6M17 11h6"/></svg>
+          </div>
+          <h3>Zaproś graczy</h3>
+          <p>Pokazujesz QR na ekranie albo wrzucasz link na firmowy Slack. Gracze wchodzą z telefonu — żadnej apki do instalowania.</p>
+          <div class="arrow"></div>
+        </div>
+        <div class="step">
+          <span class="num">03</span>
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="1.7" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          </div>
+          <h3>Obstawiajcie</h3>
+          <p>Ty tworzysz pytania, gracze wybierają opcje. Mnożniki liczą się same — im mniej osób na danej opcji, tym więcej zgarniesz.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- USE CASES -->
+  <section class="section" style="padding-top:20px">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Gdzie się sprawdza</span>
+        <h2>Cztery okazje.<br>Jeden pokój.</h2>
+        <p>Wszędzie tam, gdzie są ludzie i jest co komentować, Betzy dokłada warstwę emocji.</p>
+      </div>
+      <div class="cases">
+        <div class="case" onclick="cta()">
+          <div class="img" style="background-image:url('assets/img-office.png')"></div>
+          <div class="overlay"></div>
+          <div class="content">
+            <span class="k">01 · Praca</span>
+            <h3 class="t">Eventy firmowe</h3>
+            <p class="d">Quiz na integracji, typowanie wyników hackathonu, bingo na kick-offie.</p>
+          </div>
+        </div>
+        <div class="case" onclick="cta()">
+          <div class="img" style="background-image:url('assets/img-bar.png')"></div>
+          <div class="overlay"></div>
+          <div class="content">
+            <span class="k">02 · Mecz</span>
+            <h3 class="t">Watch parties</h3>
+            <p class="d">Strzelec meczu, pierwsza żółta kartka, wynik do przerwy. Ekipa się nakręca.</p>
+          </div>
+        </div>
+        <div class="case" onclick="cta()">
+          <div class="img" style="background-image:url('assets/img-livingroom.png')"></div>
+          <div class="overlay"></div>
+          <div class="content">
+            <span class="k">03 · Dom</span>
+            <h3 class="t">Imprezy</h3>
+            <p class="d">Typuj gości wieczoru, komentuj randki z Tindera, stawiaj na piosenki.</p>
+          </div>
+        </div>
+        <div class="case" onclick="cta()">
+          <div class="img" style="background-image:url('assets/img-office.png');filter:hue-rotate(-15deg) saturate(.8)"></div>
+          <div class="overlay"></div>
+          <div class="content">
+            <span class="k">04 · Sala</span>
+            <h3 class="t">Szkolenia</h3>
+            <p class="d">Case studies z mnożnikami — uczestnicy obstawiają rozstrzygnięcia prawdziwych sytuacji.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROOF -->
+  <section class="wrap">
+    <div class="proof">
+      <p class="quote">Mega zabawa! Cała firma grała przez cały event.</p>
+      <div class="meta">
+        <span class="pill">Tłusty Czwartek</span>
+        <span>26 osób · event firmowy</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOTTOM CTA -->
+  <section class="bcta">
+    <div class="bcta-inner wrap">
+      <h2>Pierwszy pokój<br>na <em>dziś wieczór</em>?</h2>
+      <p>Zapraszasz ekipę, odpalasz pierwszą rundę i widzisz jak telefon w czyjejś ręce zaczyna mocniej wibrować.</p>
+      <button class="btn-gold" onclick="cta()">
+        Wypróbuj za darmo
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </button>
+      <p class="tiny">Bez rejestracji. Wchodzisz i grasz.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="row">
+        <img src="assets/logo.png" alt="Betzy">
+        <span>Betzy</span>
+      </div>
+      <p class="copy mono">© 2026 · Gra towarzyska, nie bukmacher.</p>
+    </div>
+  </footer>
+</main>
+
+
+<script>
+  // Variant switching with persistence
+  // Only variant A now — switcher removed
+
+  function cta(){
+    const btns = document.querySelectorAll('.btn-gold');
+    btns.forEach(b=>{ b.style.transform='scale(.97)'; setTimeout(()=>b.style.transform='',180); });
+    setTimeout(()=>{ window.location.href = '/splash'; }, 160);
+  }
+  function scrollToHow(){
+    document.getElementById('howA').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  // ───── Live card animation (Variant A)
+  const rows = () => document.querySelectorAll('#oddsList .odds-row');
+  const initialMultis = [1.8, 3.1, 5.4];
+  const playerCounts  = [9, 5, 3];
+  const stakes        = [2340, 1120, 480];
+
+  function updateLiveCard(){
+    // Randomly shift one option
+    const idx = Math.floor(Math.random()*3);
+    const delta = (Math.random()*0.4 + 0.05) * (Math.random() < 0.6 ? 1 : -1);
+    const newPlayers = Math.max(1, playerCounts[idx] + (delta > 0 ? 1 : 0));
+    const newStake = Math.max(200, stakes[idx] + Math.round(delta * 400));
+    playerCounts[idx] = newPlayers;
+    stakes[idx] = newStake;
+
+    // Recompute crude multipliers based on share
+    const total = stakes.reduce((a,b)=>a+b,0);
+    const newMultis = stakes.map(s => {
+      const raw = total / Math.max(s, 50) * 0.65;
+      return Math.max(1.2, Math.min(9.9, raw));
+    });
+
+    rows().forEach((row, i) => {
+      const multiEl = row.querySelector('.multi');
+      const barEl = row.querySelector('.bar');
+      const labelEls = row.querySelectorAll('.players');
+      const prev = parseFloat(multiEl.dataset.m);
+      const next = newMultis[i];
+      multiEl.dataset.m = next.toFixed(2);
+      multiEl.textContent = '×' + next.toFixed(2);
+      multiEl.classList.remove('up','down');
+      void multiEl.offsetWidth;
+      if(next > prev) multiEl.classList.add('down'); // higher multi = less favored
+      else if(next < prev) multiEl.classList.add('up');
+
+      labelEls[0].textContent = `${playerCounts[i]} graczy · ${stakes[i].toLocaleString('pl-PL')} pts`;
+      const share = (stakes[i] / total) * 100;
+      barEl.style.width = Math.max(8, Math.min(88, share)) + '%';
+
+      // leader = highest stake
+      const maxIdx = stakes.indexOf(Math.max(...stakes));
+      row.classList.toggle('leader', i === maxIdx);
+    });
+
+    // Update pool
+    document.getElementById('poolV').textContent = total.toLocaleString('pl-PL') + ' pts';
+  }
+  setInterval(updateLiveCard, 2400);
+
+  // Timer countdown
+  let t = 167; // seconds
+  function tick(){
+    t -= 1;
+    if(t < 0) t = 179;
+    const m = String(Math.floor(t/60)).padStart(2,'0');
+    const s = String(t%60).padStart(2,'0');
+    const el = document.getElementById('timerV');
+    if(el) el.textContent = `${m}:${s}`;
+  }
+  setInterval(tick, 1000);
+
+  // Occasionally pop a new avatar
+  const avNames = [['AZ','#a78bfa'],['WK','#22d3ee'],['OM','#f87171'],['ZB','#34d399'],['TS','#fbbf24'],['HD','#f472b6']];
+  let avI = 0;
+  setInterval(()=>{
+    const stack = document.getElementById('avStack');
+    if(!stack) return;
+    const [initials, color] = avNames[avI % avNames.length];
+    avI++;
+    const av = document.createElement('div');
+    av.className = 'av';
+    av.style.background = color;
+    av.textContent = initials;
+    stack.appendChild(av);
+    // keep max 7
+    while(stack.children.length > 7) stack.removeChild(stack.firstChild);
+  }, 4200);
+</script>
+</body>
+</html>
