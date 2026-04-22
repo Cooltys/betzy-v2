@@ -21,8 +21,6 @@
   }
   body {
     height: 100vh;
-    /* iOS safari fallback */
-    height: -webkit-fill-available;
     height: 100dvh;
     overflow: hidden;
   }

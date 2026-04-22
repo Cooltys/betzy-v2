@@ -1,17 +1,10 @@
 import { useState } from 'react'
 import BottomSheet from './BottomSheet'
+import TimerPicker from './TimerPicker'
 import { supabase } from '../lib/supabase'
 import { errorMessage } from '../lib/tokens'
 
-const TIMER_PRESETS = [
-  { label: '30s', sec: 30 },
-  { label: '1 min', sec: 60 },
-  { label: '3 min', sec: 180 },
-  { label: '5 min', sec: 300 },
-  { label: '10 min', sec: 600 },
-]
-
-export default function CreateQuestionSheet({ open, onClose, sessionId, onCreated, onError }) {
+export default function CreateQuestionSheet({ open, onClose, sessionId, isHost = true, onCreated, onError }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [options, setOptions] = useState(['', ''])
@@ -66,7 +59,7 @@ export default function CreateQuestionSheet({ open, onClose, sessionId, onCreate
   }
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="Nowy zakład">
+    <BottomSheet open={open} onClose={onClose} title={isHost ? 'Nowy zakład' : 'Zaproponuj zakład'}>
       <div className="p-5 space-y-4">
         {/* Title */}
         <div>
@@ -109,26 +102,14 @@ export default function CreateQuestionSheet({ open, onClose, sessionId, onCreate
           </div>
         </div>
 
-        {/* Timer */}
-        <div>
-          <label className="k-label block mb-2">Czas na obstawianie</label>
-          <div className="grid grid-cols-5 gap-2">
-            {TIMER_PRESETS.map(p => (
-              <button
-                key={p.sec}
-                type="button"
-                onClick={() => setExpiresInSec(p.sec)}
-                className={`py-2.5 rounded-lg text-xs font-bold transition-all ${
-                  expiresInSec === p.sec
-                    ? 'bg-amber-brand/[0.15] border border-amber-brand/50 text-amber-brand'
-                    : 'bg-white/[0.03] border border-white/10 text-slate-300'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+        {/* Timer — only for host. Player proposals get timer set by host at approval. */}
+        {isHost ? (
+          <TimerPicker value={expiresInSec} onChange={setExpiresInSec} />
+        ) : (
+          <div className="p-3 rounded-xl bg-amber-brand/[0.06] border border-amber-brand/20 text-[11px] text-amber-brand/80 leading-relaxed">
+            💡 Twoja propozycja pójdzie do hosta. Jeśli ją zaakceptuje, ustawi czas i uruchomi zakład dla wszystkich.
           </div>
-        </div>
+        )}
       </div>
 
       <div className="p-5 pt-3 border-t border-white/10 safe-bottom">
@@ -137,7 +118,7 @@ export default function CreateQuestionSheet({ open, onClose, sessionId, onCreate
           disabled={!canSubmit || submitting}
           className="w-full py-4 rounded-[14px] bg-amber-brand text-black font-bold text-sm uppercase tracking-wider transition-all active:scale-95 shadow-amber disabled:opacity-40"
         >
-          {submitting ? 'Tworzenie…' : 'Uruchom zakład'}
+          {submitting ? (isHost ? 'Tworzenie…' : 'Wysyłanie…') : (isHost ? 'Uruchom zakład' : 'Zaproponuj hostowi')}
         </button>
       </div>
     </BottomSheet>

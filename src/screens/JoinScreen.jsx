@@ -10,49 +10,65 @@ export default function JoinScreen() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { profile } = useProfile()
-  const [code, setCode] = useState(() => (searchParams.get('code') || '').toUpperCase())
+  const initialCode = (searchParams.get('code') || '').toUpperCase()
+  const [code, setCode] = useState(initialCode)
   const [password, setPassword] = useState('')
   const [needsPassword, setNeedsPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState(null)
+  const [autoJoinTried, setAutoJoinTried] = useState(false)
 
   const canJoin = code.trim().length >= 6 && profile.nick
 
-  const handleJoin = async () => {
-    if (!canJoin || loading) return
+  const doJoin = async (currentCode, currentPassword) => {
     if (!profile.nick) {
       setToast({ kind: 'error', text: 'Najpierw ustaw swój nick' })
-      return
+      return false
     }
-
     setLoading(true)
     try {
       const { data, error } = await supabase.rpc('b2_join_room', {
-        p_join_code: code.trim().toUpperCase(),
+        p_join_code: currentCode.trim().toUpperCase(),
         p_nick: profile.nick,
         p_emoji: profile.emoji,
         p_color: profile.color,
-        p_password: password || null,
+        p_password: currentPassword || null,
       })
-
       if (error) {
         const msg = errorMessage(error)
-        if (error.message === 'wrong_password' && !needsPassword) {
+        if (error.message === 'wrong_password') {
           setNeedsPassword(true)
           setToast({ kind: 'info', text: 'Ten pokój wymaga hasła' })
         } else {
           setToast({ kind: 'error', text: msg })
         }
         setLoading(false)
-        return
+        return false
       }
-
       navigate(`/room/${data.session_id}`)
+      return true
     } catch (e) {
       setToast({ kind: 'error', text: errorMessage(e) })
       setLoading(false)
+      return false
     }
   }
+
+  const handleJoin = () => {
+    if (!canJoin || loading) return
+    doJoin(code, password)
+  }
+
+  // Auto-join when user arrives via link with ?code= and already has a profile.
+  // Skips if room needs password (first attempt will show password field).
+  useEffect(() => {
+    if (autoJoinTried) return
+    if (!initialCode || initialCode.length < 6) return
+    if (!profile.nick) return
+    setAutoJoinTried(true)
+    doJoin(initialCode, '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCode, profile.nick])
 
   return (
     <div className="flex-1 flex flex-col bg-bg text-white">

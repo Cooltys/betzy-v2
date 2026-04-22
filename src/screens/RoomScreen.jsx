@@ -3,11 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom'
 import StatusBar from '../components/StatusBar'
 import Toast from '../components/Toast'
 import BetCard from '../components/BetCard'
+import ProposalCard from '../components/ProposalCard'
 import CreateQuestionSheet from '../components/CreateQuestionSheet'
+import ApproveProposalSheet from '../components/ApproveProposalSheet'
 import StakeInputSheet from '../components/StakeInputSheet'
 import BonusSheet from '../components/BonusSheet'
 import ShareSheet from '../components/ShareSheet'
 import HostMenuSheet from '../components/HostMenuSheet'
+import BettorsSheet from '../components/BettorsSheet'
 import PodiumView from './PodiumView'
 import { useAuth } from '../hooks/useAuth'
 import { useRoom } from '../hooks/useRoom'
@@ -27,10 +30,14 @@ export default function RoomScreen() {
   const [showMenu, setShowMenu] = useState(false)
   const [showBonus, setShowBonus] = useState(false)
   const [showShare, setShowShare] = useState(false)
+  const [bettorsForQuestion, setBettorsForQuestion] = useState(null)
+  const [approveTarget, setApproveTarget] = useState(null)
 
   // Celebration: trigger confetti + haptic for newly-resolved bets where I won
   const seenResolvedRef = useRef(new Set())
   const initialSeenRef = useRef(false)
+  const seenBonusRef = useRef(new Set())
+  const initialBonusRef = useRef(false)
 
   // Derived
   const { session, players, questions, options, bets, me, isHost, loading, error } = room
@@ -70,13 +77,49 @@ export default function RoomScreen() {
     }
   }, [questions, bets, me, loading])
 
+  // Notify player about bonuses awarded to them
+  useEffect(() => {
+    if (loading || !me) return
+    const myBonuses = room.events.filter(e => e.kind === 'bonus_awarded' && e.player_id === me.id)
+
+    if (!initialBonusRef.current) {
+      myBonuses.forEach(e => seenBonusRef.current.add(e.id))
+      initialBonusRef.current = true
+      return
+    }
+
+    for (const e of myBonuses) {
+      if (seenBonusRef.current.has(e.id)) continue
+      seenBonusRef.current.add(e.id)
+
+      const amount = e.payload?.amount ?? 0
+      const reason = e.payload?.reason
+      const sign = amount > 0 ? '+' : ''
+      const icon = amount > 0 ? '🎁' : '💸'
+      const reasonText = reason ? ` — ${reason}` : ''
+
+      haptic(amount > 0 ? HAPTIC.success : HAPTIC.loss)
+      setToast({
+        kind: amount > 0 ? 'success' : 'error',
+        icon,
+        text: `Dostałeś ${sign}${amount.toLocaleString()} pts${reasonText}`,
+        persistent: true,
+      })
+    }
+  }, [room.events, me, loading])
+
+  const proposalQs = useMemo(
+    () => questions.filter(q => !q.is_approved),
+    [questions]
+  )
+
   const activeQs = useMemo(() => questions.filter(q => {
-    const isExpired = q.expires_at && new Date(q.expires_at).getTime() < Date.now()
-    return q.status === 'open' || (q.status === 'open' && isExpired) || q.status === 'closed'
+    if (!q.is_approved) return false
+    return q.status === 'open' || q.status === 'closed'
   }), [questions])
 
   const historyQs = useMemo(
-    () => questions.filter(q => q.status === 'resolved' || q.status === 'cancelled'),
+    () => questions.filter(q => q.is_approved && (q.status === 'resolved' || q.status === 'cancelled')),
     [questions]
   )
 
@@ -105,6 +148,28 @@ export default function RoomScreen() {
       p_question_id: qid,
       p_winning_option_id: optionId,
     })
+    if (error) setToast({ kind: 'error', text: errorMessage(error) })
+  }
+
+  const handleApprove = (qid) => {
+    const q = questions.find(x => x.id === qid)
+    if (q) setApproveTarget(q)
+  }
+
+  const handleApproveConfirm = async (expiresInSec) => {
+    if (!approveTarget) return
+    const { error } = await supabase.rpc('b2_approve_question', {
+      p_question_id: approveTarget.id,
+      p_expires_in_sec: expiresInSec,
+    })
+    setApproveTarget(null)
+    if (error) setToast({ kind: 'error', text: errorMessage(error) })
+    else setToast({ kind: 'success', text: 'Propozycja zaakceptowana — zakład uruchomiony!' })
+  }
+
+  const handleReject = async (qid) => {
+    if (!confirm('Odrzucić propozycję?')) return
+    const { error } = await supabase.rpc('b2_reject_question', { p_question_id: qid })
     if (error) setToast({ kind: 'error', text: errorMessage(error) })
   }
 
@@ -159,7 +224,7 @@ export default function RoomScreen() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-bg text-white">
+    <div className="flex-1 flex flex-col bg-bg text-white min-h-0">
       <StatusBar />
 
       {/* Header */}
@@ -219,6 +284,27 @@ export default function RoomScreen() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Proposals from players — shown above active bets */}
+        {proposalQs.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="k-label px-1">
+              Propozycje ({proposalQs.length})
+            </h2>
+            {proposalQs.map(q => (
+              <ProposalCard
+                key={q.id}
+                question={q}
+                options={options}
+                players={players}
+                isHost={isHost}
+                me={me}
+                onApprove={() => handleApprove(q.id)}
+                onReject={() => handleReject(q.id)}
+              />
+            ))}
+          </section>
+        )}
+
         {/* Active bets */}
         {activeQs.length > 0 && (
           <section className="space-y-3">
@@ -229,6 +315,7 @@ export default function RoomScreen() {
                 question={q}
                 options={options}
                 bets={bets}
+                players={players}
                 seed={session.virtual_seed}
                 isHost={isHost}
                 me={me}
@@ -236,6 +323,7 @@ export default function RoomScreen() {
                 onResolve={(optionId) => handleResolve(q.id, optionId)}
                 onClose={() => handleClose(q.id)}
                 onCancel={() => handleCancel(q.id)}
+                onShowBettors={() => setBettorsForQuestion(q)}
               />
             ))}
           </section>
@@ -264,6 +352,7 @@ export default function RoomScreen() {
                 question={q}
                 options={options}
                 bets={bets}
+                players={players}
                 seed={session.virtual_seed}
                 isHost={isHost}
                 me={me}
@@ -290,14 +379,16 @@ export default function RoomScreen() {
             </div>
           </div>
           <div className="flex-1" />
-          {isHost && (
-            <button
-              onClick={() => setShowCreate(true)}
-              className="shrink-0 px-5 py-3 rounded-full bg-amber-brand text-black text-sm font-bold uppercase tracking-wider active:scale-95 shadow-amber"
-            >
-              + Zakład
-            </button>
-          )}
+          <button
+            onClick={() => setShowCreate(true)}
+            className={`shrink-0 px-5 py-3 rounded-full text-sm font-bold uppercase tracking-wider active:scale-95 transition ${
+              isHost
+                ? 'bg-amber-brand text-black shadow-amber'
+                : 'bg-purple-brand/15 text-purple-brand border border-purple-brand/40 hover:bg-purple-brand/25'
+            }`}
+          >
+            {isHost ? '+ Zakład' : '💡 Zaproponuj'}
+          </button>
         </div>
       </div>
 
@@ -316,10 +407,14 @@ export default function RoomScreen() {
         open={showCreate}
         onClose={() => setShowCreate(false)}
         sessionId={sessionId}
+        isHost={isHost}
         onCreated={() => {
           setShowCreate(false)
           haptic(HAPTIC.success)
-          setToast({ kind: 'success', text: 'Zakład uruchomiony!' })
+          setToast({
+            kind: 'success',
+            text: isHost ? 'Zakład uruchomiony!' : 'Propozycja wysłana — czekamy na hosta',
+          })
         }}
         onError={(msg) => setToast({ kind: 'error', text: msg })}
       />
@@ -378,6 +473,23 @@ export default function RoomScreen() {
           })
         }}
         onError={(msg) => setToast({ kind: 'error', text: msg })}
+      />
+
+      <BettorsSheet
+        open={!!bettorsForQuestion}
+        onClose={() => setBettorsForQuestion(null)}
+        question={bettorsForQuestion}
+        options={options}
+        bets={bets}
+        players={players}
+        me={me}
+      />
+
+      <ApproveProposalSheet
+        open={!!approveTarget}
+        onClose={() => setApproveTarget(null)}
+        question={approveTarget}
+        onConfirm={handleApproveConfirm}
       />
 
       <Toast toast={toast} onClose={() => setToast(null)} />

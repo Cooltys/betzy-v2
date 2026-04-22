@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react'
  *   question, options, bets, seed, isHost, me,
  *   onOpenStake(optionId), onResolve(optionId), onClose, onCancel
  */
-export default function BetCard({ question, options, bets, seed, isHost, me, onOpenStake, onResolve, onClose, onCancel, onRevert }) {
+export default function BetCard({ question, options, bets, players = [], seed, isHost, me, onOpenStake, onResolve, onClose, onCancel, onRevert, onShowBettors }) {
   const q = question
   const qOpts = options.filter(o => o.question_id === q.id).sort((a, b) => a.position - b.position)
   const qBets = bets.filter(b => b.question_id === q.id)
@@ -92,10 +92,25 @@ export default function BetCard({ question, options, bets, seed, isHost, me, onO
         )}
       </div>
 
-      {/* My staked banner */}
-      {myStaked > 0 && effStatus === 'open' && (
-        <div className="text-[11px] font-mono text-amber-brand/80 tracking-wide">
-          Postawiłeś {myStaked.toLocaleString()} pts
+      {/* Pool / my staked info */}
+      {(effStatus === 'open' || effStatus === 'closed') && (
+        <div className="flex items-center justify-between gap-3 text-[11px] font-mono tracking-wide">
+          <span className="text-slate-500">
+            Pula: <span className="text-slate-200 font-semibold">{(totalPool + seed).toLocaleString()}</span> pts
+            {totalPool === 0 && <span className="text-slate-600"> (startowa)</span>}
+          </span>
+          {myStaked > 0 && (
+            <span className="text-amber-brand/80">
+              Ty: {myStaked.toLocaleString()} pts
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Hint before first bet */}
+      {totalPool === 0 && effStatus === 'open' && (
+        <div className="text-[10px] text-slate-600 italic">
+          Mnożniki ustalą się po pierwszym zakładzie
         </div>
       )}
 
@@ -126,7 +141,19 @@ export default function BetCard({ question, options, bets, seed, isHost, me, onO
 
       {/* Full options list — always for open/closed, only when expanded for resolved/cancelled */}
       {(effStatus === 'open' || effStatus === 'closed' || expanded) && (
-      <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+      <div className="space-y-2">
+      {/* Show bettors CTA */}
+      {totalPool > 0 && onShowBettors && (
+        <button
+          type="button"
+          onClick={onShowBettors}
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 transition-all text-xs font-semibold text-slate-200"
+        >
+          <span className="text-base">👥</span>
+          Zobacz kto co postawił
+        </button>
+      )}
+      <div className="space-y-2">
         {qOpts.map(opt => {
           const optSum = qBets.filter(b => b.option_id === opt.id).reduce((s, b) => s + b.amount, 0)
           const mult = optSum + seedPerOption > 0
@@ -137,6 +164,19 @@ export default function BetCard({ question, options, bets, seed, isHost, me, onO
           const isWinning = effStatus === 'resolved' && q.winning_option_id === opt.id
           const iMissed = effStatus === 'resolved' && q.winning_option_id !== opt.id && myOnOpt > 0
           const canBet = effStatus === 'open' && me && me.balance > 0
+
+          const showMult = totalPool > 0 || effStatus === 'resolved'
+
+          // Aggregate bets on this option by player
+          const betsOnOpt = qBets.filter(b => b.option_id === opt.id)
+          const byPlayer = new Map()
+          betsOnOpt.forEach(b => {
+            byPlayer.set(b.player_id, (byPlayer.get(b.player_id) || 0) + b.amount)
+          })
+          const bettorsList = Array.from(byPlayer.entries())
+            .map(([pid, amount]) => ({ player: players.find(p => p.id === pid), amount }))
+            .filter(x => x.player)
+            .sort((a, b) => b.amount - a.amount)
 
           return (
             <div key={opt.id} className={`relative rounded-xl overflow-hidden border ${
@@ -167,15 +207,22 @@ export default function BetCard({ question, options, bets, seed, isHost, me, onO
                   </div>
                   <div className="flex items-center gap-3 mt-0.5 text-[11px] font-mono text-slate-400">
                     <span>{optSum.toLocaleString()} pts</span>
+                    {bettorsList.length > 0 && (
+                      <span className="text-slate-500">{bettorsList.length} {bettorsList.length === 1 ? 'osoba' : bettorsList.length < 5 ? 'osoby' : 'osób'}</span>
+                    )}
                     {myOnOpt > 0 && (
                       <span className="text-amber-brand">Ty: {myOnOpt.toLocaleString()}</span>
                     )}
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className={`font-mono font-bold text-lg ${palette.accent}`}>
-                    ×{mult.toFixed(2)}
-                  </div>
+                  {showMult ? (
+                    <div className={`font-mono font-bold text-lg ${palette.accent}`}>
+                      ×{mult.toFixed(2)}
+                    </div>
+                  ) : (
+                    <div className="font-mono font-bold text-lg text-slate-600">—</div>
+                  )}
                 </div>
               </div>
 
@@ -194,6 +241,7 @@ export default function BetCard({ question, options, bets, seed, isHost, me, onO
             </div>
           )
         })}
+      </div>
       </div>
       )}
 

@@ -37,10 +37,10 @@ export default function SplashScreen() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-bg text-white">
+    <div className="flex-1 flex flex-col bg-bg text-white min-h-0">
       <StatusBar />
 
-      <div className="flex-1 overflow-y-auto px-5 pt-5 pb-0">
+      <div className="flex-1 overflow-y-auto min-h-0 px-5 pt-5 pb-6">
         {/* Logo + tagline */}
         <div className="text-center py-8 pb-6">
           <div
@@ -121,7 +121,7 @@ export default function SplashScreen() {
       </div>
 
       {/* Bottom CTA */}
-      <div className="px-5 pt-3.5 pb-6 safe-bottom shrink-0">
+      <div className="shrink-0 px-5 pt-3.5 pb-6 safe-bottom bg-bg border-t border-white/5">
         <button
           onClick={go}
           disabled={!canContinue}
