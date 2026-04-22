@@ -32,10 +32,10 @@ export default function CreateQuestionSheet({ open, onClose, sessionId, onCreate
     setOptions(prev => {
       const next = [...prev]
       next[idx] = val
-      // Auto-grow: if last is non-empty and we have <6, add empty
+      // Auto-grow: if last is non-empty, append an empty field
       const lastNonEmpty = next.findLastIndex(o => o.trim().length > 0)
-      if (lastNonEmpty === next.length - 1 && next.length < 6) next.push('')
-      // Shrink trailing empties beyond 1
+      if (lastNonEmpty === next.length - 1) next.push('')
+      // Shrink trailing empties beyond 1 (but keep at least 2 fields)
       while (next.length > 2) {
         const len = next.length
         if (!next[len - 1].trim() && !next[len - 2].trim()) next.pop()
@@ -94,7 +94,7 @@ export default function CreateQuestionSheet({ open, onClose, sessionId, onCreate
 
         {/* Options */}
         <div>
-          <label className="k-label block mb-2">Opcje (min. 2, max. 6)</label>
+          <label className="k-label block mb-2">Opcje (min. 2)</label>
           <div className="space-y-2">
             {options.map((opt, i) => (
               <input

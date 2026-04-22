@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
 import MobileFrame from './components/MobileFrame'
 import { useAuth } from './hooks/useAuth'
 import { useProfile } from './hooks/useProfile'
@@ -31,33 +31,30 @@ export default function App() {
 
   const hasProfile = profile.nick && profile.nick.length >= 2
 
-  // Landing ("/") is a static HTML served by Cloudflare — React app lives under /splash, /rooms, etc.
-  // If someone has a profile and lands on /splash, send them to /rooms unless there's a code in URL.
-
   return (
     <MobileFrame>
       <Routes>
-        {/* If somehow React loads at "/" (dev fallback), show splash */}
         <Route path="/" element={<Navigate to="/splash" replace />} />
         <Route path="/splash" element={<SplashScreen />} />
-        <Route
-          path="/rooms"
-          element={hasProfile ? <RoomsScreen /> : <Navigate to="/splash" replace />}
-        />
-        <Route
-          path="/join"
-          element={hasProfile ? <JoinScreen /> : <Navigate to="/splash" replace />}
-        />
-        <Route
-          path="/create"
-          element={hasProfile ? <CreateRoomScreen /> : <Navigate to="/splash" replace />}
-        />
-        <Route
-          path="/room/:sessionId"
-          element={hasProfile ? <RoomScreen /> : <Navigate to="/splash" replace />}
-        />
+        <Route path="/rooms" element={<RequireProfile hasProfile={hasProfile}><RoomsScreen /></RequireProfile>} />
+        <Route path="/join" element={<RequireProfile hasProfile={hasProfile}><JoinScreen /></RequireProfile>} />
+        <Route path="/create" element={<RequireProfile hasProfile={hasProfile}><CreateRoomScreen /></RequireProfile>} />
+        <Route path="/room/:sessionId" element={<RequireProfile hasProfile={hasProfile}><RoomScreen /></RequireProfile>} />
         <Route path="*" element={<Navigate to="/splash" replace />} />
       </Routes>
     </MobileFrame>
   )
+}
+
+/**
+ * Require the user to have a profile.
+ * If not, send them to /splash — but preserve any `?code=...` query param
+ * so that after they set a profile they land back where they intended.
+ */
+function RequireProfile({ hasProfile, children }) {
+  const [searchParams] = useSearchParams()
+  if (hasProfile) return children
+  const code = searchParams.get('code')
+  const target = code ? `/splash?code=${encodeURIComponent(code)}` : '/splash'
+  return <Navigate to={target} replace />
 }

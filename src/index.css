@@ -16,14 +16,18 @@
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior: none;
   }
+  html, body {
+    height: 100%;
+  }
   body {
     height: 100vh;
+    /* iOS safari fallback */
+    height: -webkit-fill-available;
     height: 100dvh;
     overflow: hidden;
   }
   #root {
-    height: 100vh;
-    height: 100dvh;
+    height: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
