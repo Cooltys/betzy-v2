@@ -21,6 +21,9 @@ export default function BetCard({ question, options, bets, seed, isHost, me, onO
   const optCount = qOpts.length || 1
   const seedPerOption = seed / optCount
 
+  // Resolved/cancelled bets are collapsed by default
+  const [expanded, setExpanded] = useState(false)
+
   // Tick every second while open so we detect expiry without a manual refresh
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
@@ -96,8 +99,34 @@ export default function BetCard({ question, options, bets, seed, isHost, me, onO
         </div>
       )}
 
-      {/* Options */}
-      <div className="space-y-2">
+      {/* Compact resolved summary (collapsed by default) */}
+      {effStatus === 'resolved' && !expanded && (
+        <CompactResolvedSummary
+          qOpts={qOpts}
+          winningOptionId={q.winning_option_id}
+          myBets={myBets}
+          myStaked={myStaked}
+          onExpand={() => setExpanded(true)}
+        />
+      )}
+
+      {/* Cancelled compact note */}
+      {effStatus === 'cancelled' && !expanded && (
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <span className="text-slate-400">Zakład anulowany — stawki zwrócone</span>
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="text-slate-500 hover:text-slate-300 font-semibold uppercase tracking-wider"
+          >
+            Pokaż opcje ↓
+          </button>
+        </div>
+      )}
+
+      {/* Full options list — always for open/closed, only when expanded for resolved/cancelled */}
+      {(effStatus === 'open' || effStatus === 'closed' || expanded) && (
+      <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
         {qOpts.map(opt => {
           const optSum = qBets.filter(b => b.option_id === opt.id).reduce((s, b) => s + b.amount, 0)
           const mult = optSum + seedPerOption > 0
@@ -166,6 +195,18 @@ export default function BetCard({ question, options, bets, seed, isHost, me, onO
           )
         })}
       </div>
+      )}
+
+      {/* Collapse back button for resolved/cancelled when expanded */}
+      {(effStatus === 'resolved' || effStatus === 'cancelled') && expanded && (
+        <button
+          type="button"
+          onClick={() => setExpanded(false)}
+          className="w-full text-center text-[11px] text-slate-500 hover:text-slate-300 font-semibold uppercase tracking-wider py-1"
+        >
+          Zwiń ↑
+        </button>
+      )}
 
       {/* Host actions for open/closed */}
       {isHost && (effStatus === 'open' || effStatus === 'closed') && (
@@ -232,6 +273,44 @@ function ResolvedResult({ myBets, winningOptionId }) {
     <div className="text-center py-2 bg-loss/10 border border-loss/30 rounded-xl">
       <div className="text-[10px] font-mono text-loss/70 tracking-wider uppercase">Straciłeś</div>
       <div className="text-xl font-bold text-loss mt-0.5">{diff.toLocaleString()} pts</div>
+    </div>
+  )
+}
+
+function CompactResolvedSummary({ qOpts, winningOptionId, myBets, myStaked, onExpand }) {
+  const winOpt = qOpts.find(o => o.id === winningOptionId)
+  const myPayout = myBets
+    .filter(b => b.option_id === winningOptionId)
+    .reduce((s, b) => s + (b.payout_amount || 0), 0)
+  const diff = myPayout - myStaked
+
+  let myLine = null
+  if (myStaked === 0) {
+    myLine = <span className="text-slate-500">Nie brałeś udziału</span>
+  } else if (diff > 0) {
+    myLine = <span className="text-win font-mono font-bold">+{diff.toLocaleString()} pts</span>
+  } else if (diff < 0) {
+    myLine = <span className="text-loss font-mono font-bold">{diff.toLocaleString()} pts</span>
+  } else {
+    myLine = <span className="text-slate-400 font-mono">±0 pts</span>
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-3 text-xs">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-slate-500 shrink-0">Wygrała:</span>
+          <span className="text-win font-bold truncate">{winOpt?.text || '?'}</span>
+        </div>
+        <div className="mt-1">{myLine}</div>
+      </div>
+      <button
+        type="button"
+        onClick={onExpand}
+        className="shrink-0 text-slate-500 hover:text-slate-300 font-semibold uppercase tracking-wider"
+      >
+        Szczegóły ↓
+      </button>
     </div>
   )
 }

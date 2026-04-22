@@ -192,6 +192,14 @@ export function useRoom(sessionId, userId) {
     return () => clearInterval(interval)
   }, [sessionId, userId])
 
+  // Fallback polling every 5s in case realtime is down
+  // (especially for host transfer — need session.host_player_id fresh)
+  useEffect(() => {
+    if (!sessionId) return
+    const interval = setInterval(() => { fetchAll() }, 5000)
+    return () => clearInterval(interval)
+  }, [sessionId, fetchAll])
+
   // Derive me + isHost
   const me = state.players.find(p => p.auth_user_id === userId) || null
   const isHost = me && state.session && state.session.host_player_id === me.id
