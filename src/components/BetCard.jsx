@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react'
  *   question, options, bets, seed, isHost, me,
  *   onOpenStake(optionId), onResolve(optionId), onClose, onCancel
  */
-export default function BetCard({ question, options, bets, players = [], seed, isHost, me, onOpenStake, onResolve, onClose, onCancel, onRevert, onShowBettors }) {
+export default function BetCard({ question, options, bets, players = [], seed, isHost, me, onOpenStake, onResolve, onClose, onCancel, onReopen, onRevert, onShowBettors }) {
   const q = question
   const qOpts = options.filter(o => o.question_id === q.id).sort((a, b) => a.position - b.position)
   const qBets = bets.filter(b => b.question_id === q.id)
@@ -265,6 +265,14 @@ export default function BetCard({ question, options, bets, players = [], seed, i
               className="flex-1 py-2 rounded-lg bg-white/[0.03] border border-white/10 text-xs font-semibold text-slate-300 hover:bg-white/[0.06] transition-colors"
             >
               Zamknij
+            </button>
+          )}
+          {effStatus === 'closed' && onReopen && (
+            <button
+              onClick={onReopen}
+              className="flex-1 py-2 rounded-lg bg-amber-brand/10 border border-amber-brand/30 text-xs font-semibold text-amber-brand hover:bg-amber-brand/20 transition-colors"
+            >
+              ↻ Odblokuj
             </button>
           )}
           <button

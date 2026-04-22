@@ -6,6 +6,7 @@ import BetCard from '../components/BetCard'
 import ProposalCard from '../components/ProposalCard'
 import CreateQuestionSheet from '../components/CreateQuestionSheet'
 import ApproveProposalSheet from '../components/ApproveProposalSheet'
+import ReopenQuestionSheet from '../components/ReopenQuestionSheet'
 import StakeInputSheet from '../components/StakeInputSheet'
 import BonusSheet from '../components/BonusSheet'
 import ShareSheet from '../components/ShareSheet'
@@ -32,6 +33,7 @@ export default function RoomScreen() {
   const [showShare, setShowShare] = useState(false)
   const [bettorsForQuestion, setBettorsForQuestion] = useState(null)
   const [approveTarget, setApproveTarget] = useState(null)
+  const [reopenTarget, setReopenTarget] = useState(null)
 
   // Celebration: trigger confetti + haptic for newly-resolved bets where I won
   const seenResolvedRef = useRef(new Set())
@@ -129,6 +131,35 @@ export default function RoomScreen() {
     return sorted.findIndex(p => p.id === me.id) + 1
   }, [players, me])
 
+  // Pool stats: how much I've staked on still-active bets,
+  // and what I could win if all my active bets hit
+  const { myStaked, myPotential } = useMemo(() => {
+    if (!me || !session) return { myStaked: 0, myPotential: 0 }
+    const seed = session.virtual_seed || 0
+    const activeIds = new Set(activeQs.map(q => q.id))
+    const myActive = bets.filter(b => b.player_id === me.id && activeIds.has(b.question_id))
+    let staked = 0
+    let potential = 0
+    for (const q of activeQs) {
+      const qOpts = options.filter(o => o.question_id === q.id)
+      const qBets = bets.filter(b => b.question_id === q.id)
+      const totalPool = qBets.reduce((s, b) => s + b.amount, 0)
+      const optCount = qOpts.length || 1
+      const seedPerOption = seed / optCount
+      const myQBets = qBets.filter(b => b.player_id === me.id)
+      if (myQBets.length === 0) continue
+      for (const mb of myQBets) {
+        staked += mb.amount
+        const optSum = qBets.filter(bb => bb.option_id === mb.option_id).reduce((s, bb) => s + bb.amount, 0)
+        const mult = optSum + seedPerOption > 0
+          ? ((totalPool + seed) / (optSum + seedPerOption))
+          : 1
+        potential += Math.round(mb.amount * mult)
+      }
+    }
+    return { myStaked: staked, myPotential: potential }
+  }, [activeQs, bets, options, session, me])
+
   const onlinePlayers = players.length
 
   const handleClose = async (qid) => {
@@ -171,6 +202,22 @@ export default function RoomScreen() {
     if (!confirm('Odrzucić propozycję?')) return
     const { error } = await supabase.rpc('b2_reject_question', { p_question_id: qid })
     if (error) setToast({ kind: 'error', text: errorMessage(error) })
+  }
+
+  const handleReopen = (qid) => {
+    const q = questions.find(x => x.id === qid)
+    if (q) setReopenTarget(q)
+  }
+
+  const handleReopenConfirm = async (expiresInSec) => {
+    if (!reopenTarget) return
+    const { error } = await supabase.rpc('b2_reopen_question', {
+      p_question_id: reopenTarget.id,
+      p_expires_in_sec: expiresInSec,
+    })
+    setReopenTarget(null)
+    if (error) setToast({ kind: 'error', text: errorMessage(error) })
+    else setToast({ kind: 'success', text: 'Zakład wznowiony!' })
   }
 
   const handleRevert = async (qid) => {
@@ -323,6 +370,7 @@ export default function RoomScreen() {
                 onResolve={(optionId) => handleResolve(q.id, optionId)}
                 onClose={() => handleClose(q.id)}
                 onCancel={() => handleCancel(q.id)}
+                onReopen={() => handleReopen(q.id)}
                 onShowBettors={() => setBettorsForQuestion(q)}
               />
             ))}
@@ -365,6 +413,18 @@ export default function RoomScreen() {
 
       {/* Footer: balance + rank + create (host) */}
       <div className="shrink-0 border-t border-white/5 bg-bg safe-bottom">
+        {/* Pool stats strip — only when I have active stakes */}
+        {myStaked > 0 && (
+          <div className="px-4 py-2 border-b border-white/5 flex items-center justify-between gap-3 text-[11px] font-mono">
+            <span className="text-slate-400">
+              💰 W grze: <span className="text-warn font-bold">{myStaked.toLocaleString()}</span>
+            </span>
+            <span className="text-slate-400">
+              🎯 Do zgarnięcia: <span className="text-win font-bold">+{(myPotential - myStaked).toLocaleString()}</span>
+            </span>
+          </div>
+        )}
+
         <div className="px-4 py-3 flex items-center gap-4">
           <div className="min-w-0">
             <div className="text-[10px] font-mono tracking-wider text-slate-500 uppercase">Balans</div>
@@ -490,6 +550,13 @@ export default function RoomScreen() {
         onClose={() => setApproveTarget(null)}
         question={approveTarget}
         onConfirm={handleApproveConfirm}
+      />
+
+      <ReopenQuestionSheet
+        open={!!reopenTarget}
+        onClose={() => setReopenTarget(null)}
+        question={reopenTarget}
+        onConfirm={handleReopenConfirm}
       />
 
       <Toast toast={toast} onClose={() => setToast(null)} />
