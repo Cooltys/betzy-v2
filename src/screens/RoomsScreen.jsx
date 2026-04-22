@@ -3,12 +3,14 @@ import StatusBar from '../components/StatusBar'
 import { useProfile } from '../hooks/useProfile'
 import { useAuth } from '../hooks/useAuth'
 import { useMyRooms } from '../hooks/useMyRooms'
+import { useInstallPrompt } from '../hooks/useInstallPrompt'
 
 export default function RoomsScreen() {
   const navigate = useNavigate()
   const { profile } = useProfile()
   const { user } = useAuth()
   const { rooms, loading } = useMyRooms(user?.id)
+  const install = useInstallPrompt()
 
   return (
     <div className="flex-1 flex flex-col bg-bg text-white">
@@ -36,8 +38,38 @@ export default function RoomsScreen() {
         </div>
       </div>
 
+      {/* Install prompt banner */}
+      {install.canPrompt && (
+        <div className="mx-4 mt-2 p-3 rounded-xl bg-amber-brand/[0.08] border border-amber-brand/25 flex items-center gap-3">
+          <div className="text-xl shrink-0">📱</div>
+          <div className="flex-1 text-xs">
+            <div className="font-semibold text-white">Zainstaluj apkę</div>
+            <div className="text-slate-400 mt-0.5">
+              {install.isIOS
+                ? 'Udostępnij → Do ekranu startowego'
+                : 'Miej Betzy pod ręką'}
+            </div>
+          </div>
+          {!install.isIOS && (
+            <button
+              onClick={install.prompt}
+              className="px-3 py-1.5 rounded-full bg-amber-brand text-black text-[11px] font-bold uppercase tracking-wider"
+            >
+              Zainstaluj
+            </button>
+          )}
+          <button
+            onClick={install.dismiss}
+            className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center text-slate-400 text-xs shrink-0"
+            aria-label="Zamknij"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-5">
+      <div className="flex-1 overflow-y-auto px-4 pb-5 pt-3">
         {loading && (
           <div className="text-center py-16 text-slate-500 text-sm">Ładowanie…</div>
         )}

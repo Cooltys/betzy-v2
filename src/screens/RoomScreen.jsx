@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import StatusBar from '../components/StatusBar'
 import Toast from '../components/Toast'
@@ -13,6 +13,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useRoom } from '../hooks/useRoom'
 import { supabase } from '../lib/supabase'
 import { errorMessage } from '../lib/tokens'
+import { haptic, HAPTIC, winConfetti, bigWinConfetti } from '../lib/haptic'
 
 export default function RoomScreen() {
   const { sessionId } = useParams()
@@ -27,8 +28,47 @@ export default function RoomScreen() {
   const [showBonus, setShowBonus] = useState(false)
   const [showShare, setShowShare] = useState(false)
 
+  // Celebration: trigger confetti + haptic for newly-resolved bets where I won
+  const seenResolvedRef = useRef(new Set())
+  const initialSeenRef = useRef(false)
+
   // Derived
   const { session, players, questions, options, bets, me, isHost, loading, error } = room
+
+  // Celebrate new resolutions
+  useEffect(() => {
+    if (loading || !me) return
+    const resolvedQs = questions.filter(q => q.status === 'resolved')
+
+    if (!initialSeenRef.current) {
+      // First load: mark all current resolved as already seen
+      resolvedQs.forEach(q => seenResolvedRef.current.add(q.id))
+      initialSeenRef.current = true
+      return
+    }
+
+    for (const q of resolvedQs) {
+      if (seenResolvedRef.current.has(q.id)) continue
+      seenResolvedRef.current.add(q.id)
+
+      const myBets = bets.filter(b => b.question_id === q.id && b.player_id === me.id)
+      const myStake = myBets.reduce((s, b) => s + b.amount, 0)
+      const myPayout = myBets
+        .filter(b => b.option_id === q.winning_option_id)
+        .reduce((s, b) => s + (b.payout_amount || 0), 0)
+      const profit = myPayout - myStake
+
+      if (profit > 0) {
+        haptic(HAPTIC.win)
+        // Big confetti if profit >= 2x stake, else normal
+        if (myStake > 0 && profit >= myStake * 2) bigWinConfetti()
+        else winConfetti()
+        setToast({ kind: 'success', text: `Wygrałeś +${profit.toLocaleString()} pts!` })
+      } else if (myStake > 0 && profit < 0) {
+        haptic(HAPTIC.loss)
+      }
+    }
+  }, [questions, bets, me, loading])
 
   const activeQs = useMemo(() => questions.filter(q => {
     const isExpired = q.expires_at && new Date(q.expires_at).getTime() < Date.now()
@@ -278,6 +318,7 @@ export default function RoomScreen() {
         sessionId={sessionId}
         onCreated={() => {
           setShowCreate(false)
+          haptic(HAPTIC.success)
           setToast({ kind: 'success', text: 'Zakład uruchomiony!' })
         }}
         onError={(msg) => setToast({ kind: 'error', text: msg })}
@@ -295,6 +336,7 @@ export default function RoomScreen() {
         me={me}
         onPlaced={(result) => {
           setStakeTarget(null)
+          haptic(HAPTIC.bet)
           setToast({ kind: 'success', text: `Postawiono! Mnożnik ×${result.multiplier?.toFixed(2) || '?'}` })
         }}
         onError={(msg) => setToast({ kind: 'error', text: msg })}
