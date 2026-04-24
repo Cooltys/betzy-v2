@@ -12,6 +12,7 @@ import BonusSheet from '../components/BonusSheet'
 import ShareSheet from '../components/ShareSheet'
 import HostMenuSheet from '../components/HostMenuSheet'
 import BettorsSheet from '../components/BettorsSheet'
+import OnboardingSheet from '../components/OnboardingSheet'
 import PodiumView from './PodiumView'
 import { useAuth } from '../hooks/useAuth'
 import { useRoom } from '../hooks/useRoom'
@@ -34,6 +35,15 @@ export default function RoomScreen() {
   const [bettorsForQuestion, setBettorsForQuestion] = useState(null)
   const [approveTarget, setApproveTarget] = useState(null)
   const [reopenTarget, setReopenTarget] = useState(null)
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    try { return localStorage.getItem('betzy:onboarding:v1:seen') !== '1' }
+    catch { return false }
+  })
+
+  const dismissOnboarding = () => {
+    try { localStorage.setItem('betzy:onboarding:v1:seen', '1') } catch {}
+    setShowOnboarding(false)
+  }
 
   // Celebration: trigger confetti + haptic for newly-resolved bets where I won
   const seenResolvedRef = useRef(new Set())
@@ -560,6 +570,8 @@ export default function RoomScreen() {
       />
 
       <Toast toast={toast} onClose={() => setToast(null)} />
+
+      {showOnboarding && <OnboardingSheet onClose={dismissOnboarding} />}
     </div>
   )
 }

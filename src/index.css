@@ -54,3 +54,10 @@
 /* Hide scrollbars but keep scrolling */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* LiveOdds tick animation — used when projection/multi changes */
+@keyframes loTick {
+  0% { transform: translateY(0); }
+  30% { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}

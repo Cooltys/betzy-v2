@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import LiveOddsPanel from './LiveOddsPanel'
 
 /**
  * Bet card — 3 states:
@@ -23,6 +24,10 @@ export default function BetCard({ question, options, bets, players = [], seed, i
 
   // Resolved/cancelled bets are collapsed by default
   const [expanded, setExpanded] = useState(false)
+
+  // Per-option live multiplier history (client-side, session-only) for sparkline.
+  // Key: option_id, Value: number[] of recent multis (last 30)
+  const historyRef = useRef(new Map())
 
   // Tick every second while open so we detect expiry without a manual refresh
   const [now, setNow] = useState(() => Date.now())
@@ -167,6 +172,23 @@ export default function BetCard({ question, options, bets, players = [], seed, i
 
           const showMult = totalPool > 0 || effStatus === 'resolved'
 
+          // Push current multi to history ref (session-only, for sparkline)
+          if (effStatus === 'open' && showMult) {
+            const hist = historyRef.current.get(opt.id) || []
+            const lastVal = hist[hist.length - 1]
+            if (lastVal === undefined || Math.abs(lastVal - mult) > 0.001) {
+              const next = [...hist, mult].slice(-30)
+              historyRef.current.set(opt.id, next)
+            }
+          }
+
+          // Weighted-avg lock-in multi across user's bets on this option
+          const myBetsOnOpt = myBets.filter(b => b.option_id === opt.id && b.multiplier_at_placement != null)
+          const myBetsOnOptStake = myBetsOnOpt.reduce((s, b) => s + b.amount, 0)
+          const lockInMulti = myBetsOnOptStake > 0
+            ? myBetsOnOpt.reduce((s, b) => s + Number(b.multiplier_at_placement) * b.amount, 0) / myBetsOnOptStake
+            : null
+
           // Aggregate bets on this option by player
           const betsOnOpt = qBets.filter(b => b.option_id === opt.id)
           const byPlayer = new Map()
@@ -225,6 +247,18 @@ export default function BetCard({ question, options, bets, players = [], seed, i
                   )}
                 </div>
               </div>
+
+              {/* Live odds panel — only when user has a bet on this option, and round is active */}
+              {myOnOpt > 0 && lockInMulti != null && (effStatus === 'open' || effStatus === 'closed') && (
+                <LiveOddsPanel
+                  myStake={myOnOpt}
+                  lockInMulti={lockInMulti}
+                  currentMulti={mult}
+                  history={historyRef.current.get(opt.id) || []}
+                  showMulti={showMult}
+                  hasPool={totalPool > 0}
+                />
+              )}
 
               {/* Host resolve button (when closed) */}
               {effStatus === 'closed' && isHost && (
