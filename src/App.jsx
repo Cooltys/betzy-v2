@@ -7,8 +7,20 @@ import RoomsScreen from './screens/RoomsScreen'
 import JoinScreen from './screens/JoinScreen'
 import CreateRoomScreen from './screens/CreateRoomScreen'
 import RoomScreen from './screens/RoomScreen'
+import TvScreen from './screens/TvScreen'
 
 export default function App() {
+  return (
+    <Routes>
+      {/* TV view — public, no auth, no MobileFrame, full viewport */}
+      <Route path="/tv/:sessionId" element={<TvScreen />} />
+      {/* Everything else routes through the mobile frame + auth gate */}
+      <Route path="*" element={<MobileApp />} />
+    </Routes>
+  )
+}
+
+function MobileApp() {
   const { loading, error } = useAuth()
   const { profile, loaded: profileLoaded } = useProfile()
 

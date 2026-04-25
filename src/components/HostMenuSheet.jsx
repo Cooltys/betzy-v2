@@ -47,6 +47,12 @@ export default function HostMenuSheet({
         <MenuItem icon="🔗" label="Zaproś graczy" desc="Kod + QR + link" onClick={() => { onClose?.(); onShare?.() }} />
         <MenuItem icon="🎁" label="Przyznaj bonus" desc="Punkty za coś fajnego" onClick={() => { onClose?.(); onBonus?.() }} />
         <MenuItem
+          icon="📺"
+          label="Otwórz TV mode"
+          desc="Duży ekran — ranking, zakłady, QR"
+          onClick={() => { onClose?.(); window.open(`/tv/${sessionId}`, '_blank') }}
+        />
+        <MenuItem
           icon="👑"
           label="Przekaż hosting"
           desc={otherPlayers.length === 0 ? 'Brak innych graczy' : 'Inny gracz zostaje hostem'}
