@@ -16,10 +16,10 @@ export default function BettorsSheet({ open, onClose, question, options, bets, p
   const playerById = new Map(players.map(p => [p.id, p]))
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="Kto co postawił">
+    <BottomSheet open={open} onClose={onClose} title="Kto co zatypował">
       <div className="p-5 space-y-5">
         <div className="text-center">
-          <div className="text-xs font-mono text-slate-500 tracking-wider uppercase mb-1">Zakład</div>
+          <div className="text-xs font-mono text-slate-500 tracking-wider uppercase mb-1">Pytanie</div>
           <div className="text-lg font-bold">{question.title}</div>
         </div>
 
@@ -45,7 +45,7 @@ export default function BettorsSheet({ open, onClose, question, options, bets, p
                 </div>
               </div>
               {rows.length === 0 ? (
-                <div className="px-4 py-3 text-xs text-slate-500 italic">Nikt nie postawił</div>
+                <div className="px-4 py-3 text-xs text-slate-500 italic">Nikt nie zatypował</div>
               ) : (
                 <div className="divide-y divide-white/5">
                   {rows.map(({ player, amount }) => {

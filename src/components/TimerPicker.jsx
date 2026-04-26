@@ -16,7 +16,7 @@ const PRESETS = [
   { label: '24 h', sec: 24 * 3600 },
 ]
 
-export default function TimerPicker({ value, onChange, label = 'Czas na obstawianie' }) {
+export default function TimerPicker({ value, onChange, label = 'Czas na typowanie' }) {
   const hours = Math.floor(value / 3600)
   const minutes = Math.floor((value % 3600) / 60)
   const isPreset = PRESETS.some(p => p.sec === value)

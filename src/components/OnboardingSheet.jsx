@@ -9,7 +9,7 @@ const SLIDES = [
       </svg>
     ),
     title: 'Mnożnik żyje',
-    body: 'W Betzy mnożnik nie jest sztywny. Im więcej osób obstawi Twoją opcję — tym niższy mnożnik. Im mniej — tym wyższy.',
+    body: 'W Betzy mnożnik nie jest sztywny. Im więcej osób wybierze Twoją opcję — tym niższy mnożnik. Im mniej — tym wyższy.',
     bullets: [
       'Widzisz mnożnik bieżący do samego końca',
       'Końcowy mnożnik = finalna pula ÷ wpłaty na zwycięską opcję',
@@ -23,7 +23,7 @@ const SLIDES = [
       </svg>
     ),
     title: 'Wygrana nie jest zablokowana',
-    body: 'To system parimutuel (jak u bukmacherów na wyścigach konnych). Inaczej niż w STS — Twoja wygrana liczy się ze stanu puli w momencie zamknięcia zakładu, a nie w momencie postawienia.',
+    body: 'To system parimutuel (znany z fantasy lig i wyścigów konnych). Twoja wygrana liczy się ze stanu puli w momencie zamknięcia pytania, a nie w momencie Twojego typu.',
     bullets: [
       'Widzisz projekcję — „≈ X pts jeśli teraz"',
       'Ostateczna kwota może być wyższa lub niższa',
@@ -36,9 +36,9 @@ const SLIDES = [
       </svg>
     ),
     title: 'Co zostaje stałe',
-    body: 'Tylko Twoja stawka jest zablokowana. Udział % w puli, mnożnik i wygrana — wszystko się rusza, bo inni dokładają po Tobie.',
+    body: 'Tylko Twój wkład jest zablokowany. Udział % w puli, mnożnik i wygrana — wszystko się rusza, bo inni dokładają po Tobie.',
     bullets: [
-      'Stawka — nie zmienisz jej po zatwierdzeniu',
+      'Wkład — nie zmienisz go po zatwierdzeniu',
       'Wszystko inne — live do końca rundy',
     ],
   },

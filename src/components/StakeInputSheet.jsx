@@ -110,7 +110,7 @@ export default function StakeInputSheet({
 
         {/* Amount display */}
         <div className="text-center">
-          <div className="k-label mb-1">Stawka</div>
+          <div className="k-label mb-1">Wkład</div>
           <div className="text-5xl font-mono font-bold text-amber-brand">
             {amount.toLocaleString()}
           </div>
@@ -152,7 +152,7 @@ export default function StakeInputSheet({
             +{projectedProfit.toLocaleString()} pts
           </div>
           <div className="text-[11px] text-slate-400 mt-1">
-            Dostaniesz {projectedPayout.toLocaleString()} pts (stawka + zysk)
+            Dostaniesz {projectedPayout.toLocaleString()} pts (wkład + zysk)
           </div>
         </div>
       </div>
@@ -163,7 +163,7 @@ export default function StakeInputSheet({
           disabled={!canSubmit}
           className="w-full py-4 rounded-[14px] bg-amber-brand text-black font-bold text-sm uppercase tracking-wider transition-all active:scale-95 shadow-amber disabled:opacity-40"
         >
-          {submitting ? 'Stawianie…' : `Postaw ${amount.toLocaleString()} pts`}
+          {submitting ? 'Wysyłanie…' : `Typuj ${amount.toLocaleString()} pts`}
         </button>
       </div>
     </BottomSheet>

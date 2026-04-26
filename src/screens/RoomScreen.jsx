@@ -82,7 +82,7 @@ export default function RoomScreen() {
         // Big confetti if profit >= 2x stake, else normal
         if (myStake > 0 && profit >= myStake * 2) bigWinConfetti()
         else winConfetti()
-        setToast({ kind: 'success', text: `Wygrałeś +${profit.toLocaleString()} pts!` })
+        setToast({ kind: 'success', text: `Wygrana! +${profit.toLocaleString()} pts` })
       } else if (myStake > 0 && profit < 0) {
         haptic(HAPTIC.loss)
       }
@@ -178,7 +178,7 @@ export default function RoomScreen() {
   }
 
   const handleCancel = async (qid) => {
-    if (!confirm('Anulować zakład? Stawki zostaną zwrócone.')) return
+    if (!confirm('Anulować pytanie? Wkłady zostaną zwrócone.')) return
     const { error } = await supabase.rpc('b2_cancel_question', { p_question_id: qid })
     if (error) setToast({ kind: 'error', text: errorMessage(error) })
   }
@@ -205,7 +205,7 @@ export default function RoomScreen() {
     })
     setApproveTarget(null)
     if (error) setToast({ kind: 'error', text: errorMessage(error) })
-    else setToast({ kind: 'success', text: 'Propozycja zaakceptowana — zakład uruchomiony!' })
+    else setToast({ kind: 'success', text: 'Propozycja zaakceptowana — pytanie uruchomione!' })
   }
 
   const handleReject = async (qid) => {
@@ -227,11 +227,11 @@ export default function RoomScreen() {
     })
     setReopenTarget(null)
     if (error) setToast({ kind: 'error', text: errorMessage(error) })
-    else setToast({ kind: 'success', text: 'Zakład wznowiony!' })
+    else setToast({ kind: 'success', text: 'Pytanie wznowione!' })
   }
 
   const handleRevert = async (qid) => {
-    if (!confirm('Cofnąć wynik? Punkty wrócą do puli, zakład zostanie przeniesiony do "Czeka na wynik".')) return
+    if (!confirm('Cofnąć wynik? Punkty wrócą do puli, pytanie zostanie przeniesione do "Czeka na wynik".')) return
     const { error } = await supabase.rpc('b2_revert_resolution', { p_question_id: qid })
     if (error) setToast({ kind: 'error', text: errorMessage(error) })
     else setToast({ kind: 'info', text: 'Wynik cofnięty — możesz wybrać ponownie' })
@@ -365,7 +365,7 @@ export default function RoomScreen() {
         {/* Active bets */}
         {activeQs.length > 0 && (
           <section className="space-y-3">
-            <h2 className="k-label px-1">Aktywne zakłady</h2>
+            <h2 className="k-label px-1">Aktywne pytania</h2>
             {activeQs.map(q => (
               <BetCard
                 key={q.id}
@@ -391,10 +391,10 @@ export default function RoomScreen() {
         {activeQs.length === 0 && (
           <div className="text-center py-14 px-6">
             <div className="text-5xl mb-3">🎯</div>
-            <h3 className="text-lg font-bold text-white mb-1">Brak aktywnych zakładów</h3>
+            <h3 className="text-lg font-bold text-white mb-1">Brak aktywnych pytań</h3>
             <p className="text-sm text-slate-400 leading-relaxed">
               {isHost
-                ? 'Stwórz pierwszy zakład — przycisk poniżej.'
+                ? 'Stwórz pierwsze pytanie — przycisk poniżej.'
                 : 'Host zaraz coś wystawi. Czekaj!'}
             </p>
           </div>
@@ -457,7 +457,7 @@ export default function RoomScreen() {
                 : 'bg-purple-brand/15 text-purple-brand border border-purple-brand/40 hover:bg-purple-brand/25'
             }`}
           >
-            {isHost ? '+ Zakład' : '💡 Zaproponuj'}
+            {isHost ? '+ Pytanie' : '💡 Zaproponuj'}
           </button>
         </div>
       </div>
@@ -483,7 +483,7 @@ export default function RoomScreen() {
           haptic(HAPTIC.success)
           setToast({
             kind: 'success',
-            text: isHost ? 'Zakład uruchomiony!' : 'Propozycja wysłana — czekamy na hosta',
+            text: isHost ? 'Pytanie uruchomione!' : 'Propozycja wysłana — czekamy na hosta',
           })
         }}
         onError={(msg) => setToast({ kind: 'error', text: msg })}
@@ -502,7 +502,7 @@ export default function RoomScreen() {
         onPlaced={(result) => {
           setStakeTarget(null)
           haptic(HAPTIC.bet)
-          setToast({ kind: 'success', text: `Postawiono! Mnożnik ×${result.multiplier?.toFixed(2) || '?'}` })
+          setToast({ kind: 'success', text: `Typ przyjęty! Mnożnik ×${result.multiplier?.toFixed(2) || '?'}` })
         }}
         onError={(msg) => setToast({ kind: 'error', text: msg })}
       />

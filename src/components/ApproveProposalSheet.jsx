@@ -32,7 +32,7 @@ export default function ApproveProposalSheet({ open, onClose, question, onConfir
           )}
         </div>
 
-        <TimerPicker value={expiresInSec} onChange={setExpiresInSec} label="Ile czasu na obstawianie?" />
+        <TimerPicker value={expiresInSec} onChange={setExpiresInSec} label="Ile czasu na typowanie?" />
       </div>
 
       <div className="p-5 pt-3 border-t border-white/10 safe-bottom">
@@ -41,7 +41,7 @@ export default function ApproveProposalSheet({ open, onClose, question, onConfir
           disabled={submitting}
           className="w-full py-4 rounded-[14px] bg-win text-black font-bold text-sm uppercase tracking-wider transition-all active:scale-95 disabled:opacity-40"
         >
-          {submitting ? 'Uruchamianie…' : '✓ Uruchom zakład'}
+          {submitting ? 'Uruchamianie…' : '✓ Uruchom pytanie'}
         </button>
       </div>
     </BottomSheet>

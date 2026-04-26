@@ -59,7 +59,7 @@ export default function CreateQuestionSheet({ open, onClose, sessionId, isHost =
   }
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={isHost ? 'Nowy zakład' : 'Zaproponuj zakład'}>
+    <BottomSheet open={open} onClose={onClose} title={isHost ? 'Nowe pytanie' : 'Zaproponuj pytanie'}>
       <div className="p-5 space-y-4">
         {/* Title */}
         <div>
@@ -107,7 +107,7 @@ export default function CreateQuestionSheet({ open, onClose, sessionId, isHost =
           <TimerPicker value={expiresInSec} onChange={setExpiresInSec} />
         ) : (
           <div className="p-3 rounded-xl bg-amber-brand/[0.06] border border-amber-brand/20 text-[11px] text-amber-brand/80 leading-relaxed">
-            💡 Twoja propozycja pójdzie do hosta. Jeśli ją zaakceptuje, ustawi czas i uruchomi zakład dla wszystkich.
+            💡 Twoja propozycja pójdzie do hosta. Jeśli ją zaakceptuje, ustawi czas i uruchomi pytanie dla wszystkich.
           </div>
         )}
       </div>
@@ -118,7 +118,7 @@ export default function CreateQuestionSheet({ open, onClose, sessionId, isHost =
           disabled={!canSubmit || submitting}
           className="w-full py-4 rounded-[14px] bg-amber-brand text-black font-bold text-sm uppercase tracking-wider transition-all active:scale-95 shadow-amber disabled:opacity-40"
         >
-          {submitting ? (isHost ? 'Tworzenie…' : 'Wysyłanie…') : (isHost ? 'Uruchom zakład' : 'Zaproponuj hostowi')}
+          {submitting ? (isHost ? 'Tworzenie…' : 'Wysyłanie…') : (isHost ? 'Uruchom pytanie' : 'Zaproponuj hostowi')}
         </button>
       </div>
     </BottomSheet>

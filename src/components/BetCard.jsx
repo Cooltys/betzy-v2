@@ -3,7 +3,7 @@ import LiveOddsPanel from './LiveOddsPanel'
 
 /**
  * Bet card — 3 states:
- *   - open: amber, timer, options with multipliers, CTA "Postaw"
+ *   - open: amber, timer, options with multipliers, CTA "Typuj"
  *   - closed: slate, "Czeka na wynik", host can resolve
  *   - resolved: green/red, own result, all winners list
  *
@@ -115,7 +115,7 @@ export default function BetCard({ question, options, bets, players = [], seed, i
       {/* Hint before first bet */}
       {totalPool === 0 && effStatus === 'open' && (
         <div className="text-[10px] text-slate-600 italic">
-          Mnożniki ustalą się po pierwszym zakładzie
+          Mnożniki ustalą się po pierwszym typie
         </div>
       )}
 
@@ -133,7 +133,7 @@ export default function BetCard({ question, options, bets, players = [], seed, i
       {/* Cancelled compact note */}
       {effStatus === 'cancelled' && !expanded && (
         <div className="flex items-center justify-between gap-2 text-xs">
-          <span className="text-slate-400">Zakład anulowany — stawki zwrócone</span>
+          <span className="text-slate-400">Pytanie anulowane — wkłady zwrócone</span>
           <button
             type="button"
             onClick={() => setExpanded(true)}
@@ -155,7 +155,7 @@ export default function BetCard({ question, options, bets, players = [], seed, i
           className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 transition-all text-xs font-semibold text-slate-200"
         >
           <span className="text-base">👥</span>
-          Zobacz kto co postawił
+          Zobacz kto co zatypował
         </button>
       )}
       <div className="space-y-2">
@@ -347,7 +347,7 @@ function ResolvedResult({ myBets, winningOptionId }) {
   if (diff > 0) {
     return (
       <div className="text-center py-2 bg-win/10 border border-win/30 rounded-xl">
-        <div className="text-[10px] font-mono text-win/70 tracking-wider uppercase">Wygrałeś</div>
+        <div className="text-[10px] font-mono text-win/70 tracking-wider uppercase">Wygrana</div>
         <div className="text-xl font-bold text-win mt-0.5">+{diff.toLocaleString()} pts</div>
       </div>
     )

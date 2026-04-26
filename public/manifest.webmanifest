@@ -1,7 +1,7 @@
 {
-  "name": "Betzy — prywatne pokoje zakładów",
+  "name": "Betzy — gra typowań na każdy event",
   "short_name": "Betzy",
-  "description": "Twoi goście obstawiają, rywalizują i kibicują w czasie rzeczywistym",
+  "description": "Goście typują, rywalizują i kibicują w czasie rzeczywistym. Bez instalacji.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

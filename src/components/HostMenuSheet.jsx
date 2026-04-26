@@ -49,7 +49,7 @@ export default function HostMenuSheet({
         <MenuItem
           icon="📺"
           label="Otwórz TV mode"
-          desc="Duży ekran — ranking, zakłady, QR"
+          desc="Duży ekran — ranking, pytania, QR"
           onClick={() => { onClose?.(); window.open(`/tv/${sessionId}`, '_blank') }}
         />
         <MenuItem

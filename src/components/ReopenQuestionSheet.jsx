@@ -22,17 +22,17 @@ export default function ReopenQuestionSheet({ open, onClose, question, onConfirm
   }
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="Odblokuj zakład">
+    <BottomSheet open={open} onClose={onClose} title="Odblokuj pytanie">
       <div className="p-5 space-y-5">
         <div className="text-center">
-          <div className="k-label mb-1">Zakład</div>
+          <div className="k-label mb-1">Pytanie</div>
           <div className="text-lg font-bold text-white">{question.title}</div>
           <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-            Zakład zostanie znowu otwarty. Dotychczasowe stawki zostają — gracze mogą dołożyć.
+            Pytanie zostanie znowu otwarte. Dotychczasowe wkłady zostają — gracze mogą dołożyć.
           </p>
         </div>
 
-        <TimerPicker value={expiresInSec} onChange={setExpiresInSec} label="Dodatkowy czas na obstawianie" />
+        <TimerPicker value={expiresInSec} onChange={setExpiresInSec} label="Dodatkowy czas na typowanie" />
       </div>
 
       <div className="p-5 pt-3 border-t border-white/10 safe-bottom">

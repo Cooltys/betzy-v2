@@ -49,7 +49,7 @@ export default function SplashScreen() {
           >
             betzy<span className="text-amber-brand">.</span>
           </div>
-          <div className="k-label mt-1.5">prywatne pokoje zakładów</div>
+          <div className="k-label mt-1.5">typuj. trafiaj. wygrywaj.</div>
         </div>
 
         {/* Avatar preview */}

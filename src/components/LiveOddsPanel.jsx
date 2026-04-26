@@ -45,7 +45,7 @@ export default function LiveOddsPanel({
           onClick={() => setOpen(true)}
           className="w-full text-[10px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-200 transition-colors py-1.5"
         >
-          📈 Szczegóły zakładu ↓
+          📈 Szczegóły typowania ↓
         </button>
       </div>
     )
@@ -113,7 +113,7 @@ export default function LiveOddsPanel({
         </div>
 
         <p className="text-[10px] text-slate-500 leading-relaxed">
-          Mnożnik żyje — im więcej osób obstawi tę opcję, tym niższy. Ostateczna wygrana z puli w momencie zamknięcia.
+          Mnożnik żyje — im więcej osób wybierze tę opcję, tym niższy. Ostateczna wygrana z puli w momencie zamknięcia.
         </p>
 
         <button

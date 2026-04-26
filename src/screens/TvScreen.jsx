@@ -264,7 +264,7 @@ function ActiveBetsSlide({ data, tick }) {
   if (active.length === 0) {
     return (
       <div className="absolute inset-0 flex items-center justify-center text-3xl text-slate-500">
-        Brak aktywnych zakładów
+        Brak aktywnych pytań
       </div>
     )
   }
@@ -272,7 +272,7 @@ function ActiveBetsSlide({ data, tick }) {
   return (
     <div className="absolute inset-0 flex flex-col px-12 py-8 overflow-hidden">
       <div className="text-[14px] font-mono tracking-[0.3em] text-slate-500 uppercase mb-6">
-        Aktywne zakłady
+        Aktywne pytania
       </div>
       <div className="flex-1 min-h-0 grid gap-6" style={{
         gridTemplateColumns: active.length === 1 ? '1fr' : active.length === 2 ? '1fr 1fr' : 'repeat(auto-fit, minmax(420px, 1fr))',
